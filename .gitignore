@@ -17,3 +17,4 @@ Makefile
 *.sqlite
 *.bak
 CMakeCache.txt
+cmake_install.cmake
