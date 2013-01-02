@@ -11,3 +11,9 @@
 *.lai
 *.la
 *.a
+
+CMakeFiles/
+Makefile
+*.sqlite
+*.bak
+CMakeCache.txt
