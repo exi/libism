@@ -15,5 +15,7 @@ namespace ISM {
             ~Trainer();
 
             void trainPattern(std::string patternName);
+
+            void learn(boost::shared_ptr<RecordedPattern> pattern, std::string patternName);
     };
 }

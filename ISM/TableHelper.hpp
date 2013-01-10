@@ -15,6 +15,8 @@ namespace ISM {
         public:
             TableHelper(std::string dbfilename);
 
+            ~TableHelper();
+
             void createTablesIfNecessary();
             void createObjectsTable();
             void createSetsTable();
@@ -22,13 +24,15 @@ namespace ISM {
             void createPatternsTable();
             void createTable(std::string tablename, std::string sql);
 
-            int insertObject(boost::shared_ptr<Object> o);
+            int insertObject(boost::shared_ptr<Object> o, int setId);
             int insertObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName);
             int insertPattern(std::string patternName);
 
             int ensurePatternName(std::string patternName);
 
+            int getPatternId(std::string patternName);
             int getLastInsertId(std::string tablename);
             boost::shared_ptr<RecordedPattern> getRecordedPattern(std::string patternName);
+            boost::shared_ptr<ObjectSet> getObjectSet(int setId);
     };
 }

@@ -23,7 +23,7 @@ include_directories(${Boost_INCLUDE_DIR})
 message(${CMAKE_VERSION})
 
 # validation
-add_definitions(-Wall -Wextra -pedantic -std=gnu++0x)
+add_definitions(-Wall -Wextra -pedantic -std=gnu++0x -ggdb)
 # GCC only sends a warning and not an error if it can't compile with stack canaries.
 set(CMAKE_REQUIRED_FLAGS "-Werror")
 

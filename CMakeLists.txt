@@ -24,5 +24,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ISM_BINARY_DIR}/bin)
 
 add_executable(demorecorder demorecorder.cpp)
 target_link_libraries(demorecorder ism)
+add_executable(trainer trainer.cpp)
+target_link_libraries(trainer ism)
 #add_executable(trainer trainer.cpp)
 #add_executable(recognizer recognizer.cpp)

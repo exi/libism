@@ -8,11 +8,13 @@
 namespace ISM {
     class Object {
         public:
-            Pose pose;
             std::string id;
             std::string type;
+            Pose pose;
 
             Object(): id(""), type("") {};
+            Object(std::string id, std::string type, Pose pose): id(id), type(type), pose(pose) {};
+
             virtual ~Object() {
                 std::cout<<"Object "<<this->id<<" destroyed"<<std::endl;
             }
@@ -25,15 +27,17 @@ namespace ISM {
             virtual std::string getType() { return this->type; };
             virtual std::string toString() {
                 std::stringstream str;
-                str<<"object: "<<this->id<<" "<<this->pose.point.x;
+                str<<"object: "<<
+                    this->type<<", "<<
+                    this->id<<", ["<<
+                    this->pose.point.x<<", "<<
+                    this->pose.point.y<<", "<<
+                    this->pose.point.z<<"], ["<<
+                    this->pose.quat.x<<", "<<
+                    this->pose.quat.y<<", "<<
+                    this->pose.quat.z<<", "<<
+                    this->pose.quat.w<<"]";
                 return str.str();
-            }
-    };
-
-    class ObservedObject: public Object {
-        public:
-            virtual ~ObservedObject() {
-                std::cout<<"ObservedObject "<<this->id<<" destroyed"<<std::endl;
             }
     };
 }
