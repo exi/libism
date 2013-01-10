@@ -1,5 +1,5 @@
-#include "ISM/Object.hpp"
-#include "ISM/Recorder.hpp"
+#include <ISM/Object.hpp>
+#include <ISM/Recorder.hpp>
 #include <iostream>
 
 using namespace ISM;
@@ -14,6 +14,6 @@ int main (int argc, char** argv) {
     o->setPose(Pose(Point(2.0, 3.0, 4.0), Quaternion(2.0, 3.0, 4.0, 5.0)));
     o->setID("testobj2");
     set->insert(o);
-    r.insert(set);
+    r.insert(set, "demoSet");
     return 0;
 }

@@ -1,11 +1,5 @@
-project(libism)
+project(ISM)
 cmake_minimum_required(VERSION 2.4)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" "${CMAKE_SOURCE_DIR}/soci/src/cmake/modules/")
-
-find_package(Boost COMPONENTS program_options REQUIRED )
-include_directories( ${Boost_INCLUDE_DIR} )
-
-message(${CMAKE_VERSION})
 
 # validation
 add_definitions(-Wall -Wextra -pedantic -std=gnu++0x)
@@ -17,18 +11,18 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-set(WITH_MYSQL OFF)
-set(SOCI_MYSQL OFF)
-set(WITH_ODBC OFF)
-set(SOCI_ODBC OFF)
-set(WITH_ORACLE OFF)
-set(SOCI_ORACLE OFF)
-set(WITH_POSTGRESQL OFF)
-set(SOCI_POSTGRESQL OFF)
-add_subdirectory(soci/src)
+add_subdirectory(ISM ./build)
+GET_DIRECTORY_PROPERTY(ISM_INCLUDE_DIR DIRECTORY ISM DEFINITION ISM_INCLUDE_DIR)
+GET_DIRECTORY_PROPERTY(ISM_LIBRARY_DIR DIRECTORY ISM DEFINITION ISM_LIBRARY_DIR)
+set(ISM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} ${ISM_INCLUDE_DIR})
+include_directories(${ISM_INCLUDE_DIR})
+link_directories(${ISM_LIBRARY_DIR})
 
-include_directories(soci/src soci/src/backends/sqlite3)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ISM_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ISM_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ISM_BINARY_DIR}/bin)
+
 add_executable(demorecorder demorecorder.cpp)
-target_link_libraries(demorecorder ${LIBS} ${Boost_LIBRARIES} soci_core soci_sqlite3)
+target_link_libraries(demorecorder ism)
 #add_executable(trainer trainer.cpp)
 #add_executable(recognizer recognizer.cpp)
