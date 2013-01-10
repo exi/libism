@@ -11,9 +11,9 @@ namespace ISM {
         std::cout<<"recorder destroyed"<<std::endl;
     }
 
-    void Recorder::insert(boost::shared_ptr<ObjectSet> set, std::string sceneName) {
-        std::cout<<"inserting set for scene "<<set->getSceneName()<<". With Objects:"<<std::endl;
-        this->tableHelper.insertObjectSet(set, sceneName);
+    void Recorder::insert(boost::shared_ptr<ObjectSet> set, std::string patternName) {
+        std::cout<<"inserting set for pattern "<<set->getPatternName()<<". With Objects:"<<std::endl;
+        this->tableHelper.insertObjectSet(set, patternName);
     }
 
 }

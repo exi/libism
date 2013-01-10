@@ -18,14 +18,14 @@ namespace ISM {
             void createObjectsTable();
             void createSetsTable();
             void createObject2SetTable();
-            void createScenesTable();
+            void createPatternsTable();
             void createTable(std::string tablename, std::string sql);
 
             int insertObject(boost::shared_ptr<Object> o);
-            int insertObjectSet(boost::shared_ptr<ObjectSet> os, std::string sceneName);
-            int insertScene(std::string sceneName);
+            int insertObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName);
+            int insertPattern(std::string patternName);
 
-            int ensureSceneName(std::string sceneName);
+            int ensurePatternName(std::string patternName);
 
             int getLastInsertId(std::string tablename);
     };

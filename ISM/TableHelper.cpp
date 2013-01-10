@@ -30,8 +30,8 @@ namespace ISM {
             this->createObject2SetTable();
         }
 
-        if (tables.find(std::string("scenes")) == tables.end()) {
-            this->createScenesTable();
+        if (tables.find(std::string("patterns")) == tables.end()) {
+            this->createPatternsTable();
         }
     }
 
@@ -45,7 +45,7 @@ namespace ISM {
     void TableHelper::createSetsTable() {
         this->createTable(
                 "sets",
-                "CREATE TABLE sets (id INTEGER PRIMARY KEY, sceneId INTEGER);"
+                "CREATE TABLE sets (id INTEGER PRIMARY KEY, patternId INTEGER);"
                 );
     }
 
@@ -56,10 +56,10 @@ namespace ISM {
                 );
     }
 
-    void TableHelper::createScenesTable() {
+    void TableHelper::createPatternsTable() {
         this->createTable(
-                "scenes",
-                "CREATE TABLE scenes (id INTEGER PRIMARY KEY, name TEXT UNIQUE);"
+                "patterns",
+                "CREATE TABLE patterns (id INTEGER PRIMARY KEY, name TEXT UNIQUE);"
                 );
     }
 
@@ -88,12 +88,12 @@ namespace ISM {
         return this->getLastInsertId("objects");
     }
 
-    int TableHelper::insertObjectSet(boost::shared_ptr<ObjectSet> os, std::string sceneName) {
+    int TableHelper::insertObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName) {
         std::vector<boost::shared_ptr<Object> > objects = os->getObjects();
 
-        int sceneId = this->ensureSceneName(sceneName);
+        int patternId = this->ensurePatternName(patternName);
 
-        (*sqlite) << "INSERT INTO sets(sceneId) VALUES (:sceneId);", use(sceneId);
+        (*sqlite) << "INSERT INTO sets(patternId) VALUES (:patternId);", use(patternId);
         int setId = this->getLastInsertId("sets");
         for (size_t i = 0; i < objects.size(); i++) {
             int oid = this->insertObject(objects[i]);
@@ -103,19 +103,19 @@ namespace ISM {
         return setId;
     }
 
-    int TableHelper::insertScene(std::string sceneName) {
-        (*sqlite) << "INSERT INTO scenes(name) VALUES (:sceneName);", use(sceneName);
-        return this->getLastInsertId("scenes");
+    int TableHelper::insertPattern(std::string patternName) {
+        (*sqlite) << "INSERT INTO patterns(name) VALUES (:patternName);", use(patternName);
+        return this->getLastInsertId("patterns");
     }
 
-    int TableHelper::ensureSceneName(std::string sceneName) {
+    int TableHelper::ensurePatternName(std::string patternName) {
         int id;
         indicator ind;
-        (*sqlite) << "SELECT id FROM scenes WHERE name = :name LIMIT 1;", into(id, ind), use(sceneName);
+        (*sqlite) << "SELECT id FROM patterns WHERE name = :name LIMIT 1;", into(id, ind), use(patternName);
         if (ind == i_ok) {
             return id;
         } else {
-            return this->insertScene(sceneName);
+            return this->insertPattern(patternName);
         }
     }
 

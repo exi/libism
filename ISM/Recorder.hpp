@@ -14,6 +14,6 @@ namespace ISM {
 
             ~Recorder();
 
-            void insert(boost::shared_ptr<ObjectSet> set, std::string sceneName);
+            void insert(boost::shared_ptr<ObjectSet> set, std::string patternName);
     };
 }
