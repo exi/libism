@@ -3,8 +3,6 @@
 
 namespace ISM {
     Recorder::Recorder(std::string dbfilename): tableHelper(dbfilename) {
-        this->tableHelper.createTablesIfNecessary();
-        std::cout<<"lastid: "<<this->tableHelper.getLastInsertId("objects")<<std::endl;
     }
 
     Recorder::~Recorder() {

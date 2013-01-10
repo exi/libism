@@ -6,6 +6,7 @@
 namespace ISM {
     TableHelper::TableHelper(std::string dbfilename) {
         this->sqlite.reset(new session(sqlite3, dbfilename.c_str()));
+        this->createTablesIfNecessary();
     }
 
     void TableHelper::createTablesIfNecessary() {
@@ -110,12 +111,19 @@ namespace ISM {
 
     int TableHelper::ensurePatternName(std::string patternName) {
         int id;
+        id = this->getPatternId(patternName);
+
+        return id == NULL ? this->insertPattern(patternName) : id;
+    }
+
+    int TableHelper::getPatternId(std::string patternName) {
+        int id;
         indicator ind;
         (*sqlite) << "SELECT id FROM patterns WHERE name = :name LIMIT 1;", into(id, ind), use(patternName);
         if (ind == i_ok) {
             return id;
         } else {
-            return this->insertPattern(patternName);
+            return NULL;
         }
     }
 
@@ -129,5 +137,25 @@ namespace ISM {
         }
 
         return id;
+    }
+
+    boost::shared_ptr<RecordedPattern> TableHelper::getRecordedPattern(std::string patternName) {
+        boost::shared_ptr<RecordedPattern> pattern;
+        int patternId = this->getPatternId(patternName);
+
+        if (patternId == NULL) {
+            return pattern;
+        }
+
+        pattern.reset(new RecordedPattern(patternName));
+
+
+        std::set<int> setIds;
+
+        rowset<row> rs = (*sqlite).prepare<< "SELECT id FROM sets where patternId = :pid;", use(patternId);
+        for (rowset<row>::const_iterator it = rs.begin(); it != rs.end(); ++it) {
+            row const& row = *it;
+            setIds.insert(row.get<int>(0));
+        }
     }
 }

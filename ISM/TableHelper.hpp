@@ -4,6 +4,7 @@
 #include "soci/src/backends/sqlite3/soci-sqlite3.h"
 #include "Object.hpp"
 #include "ObjectSet.hpp"
+#include "RecordedPattern.hpp"
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -28,5 +29,6 @@ namespace ISM {
             int ensurePatternName(std::string patternName);
 
             int getLastInsertId(std::string tablename);
+            boost::shared_ptr<RecordedPattern> getRecordedPattern(std::string patternName);
     };
 }
