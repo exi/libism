@@ -8,12 +8,13 @@ namespace ISM {
     class RecordedPattern {
         public:
             std::string name;
-            std::vector<boost::shared_ptr<ObjectSet> > objectSets;
+            std::vector<ObjectSetPtr> objectSets;
 
             RecordedPattern(std::string name):name(name) { };
 
-            void addObjectSet(boost::shared_ptr<ObjectSet> os) { this->objectSets.push_back(os); };
-            std::vector<boost::shared_ptr<ObjectSet> > getObjectSets() { return this->objectSets; };
+            void addObjectSet(ObjectSetPtr os) { this->objectSets.push_back(os); };
+            std::vector<ObjectSetPtr> getObjectSets() { return this->objectSets; };
             std::string getName() { return this->name; };
     };
+    typedef boost::shared_ptr<RecordedPattern> RecordedPatternPtr;
 }

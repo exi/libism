@@ -72,13 +72,13 @@ namespace ISM {
             use(o->getType()),
             use(o->getID()),
             use(setId),
-            use(o->getPose().point.x),
-            use(o->getPose().point.y),
-            use(o->getPose().point.z),
-            use(o->getPose().quat.x),
-            use(o->getPose().quat.y),
-            use(o->getPose().quat.z),
-            use(o->getPose().quat.w);
+            use(o->getPose()->point->x),
+            use(o->getPose()->point->y),
+            use(o->getPose()->point->z),
+            use(o->getPose()->quat->x),
+            use(o->getPose()->quat->y),
+            use(o->getPose()->quat->z),
+            use(o->getPose()->quat->w);
 
         return this->getLastInsertId("objects");
     }
@@ -160,20 +160,20 @@ namespace ISM {
             s->insert(boost::shared_ptr<Object>(new Object(
                 row.get<std::string>(0, ""),
                 row.get<std::string>(1, ""),
-                Pose(
-                    Point(
+                new Pose(
+                    new Point(
                         row.get<double>(2, 0.0),
                         row.get<double>(3, 0.0),
                         row.get<double>(4, 0.0)
                     ),
-                    Quaternion(
+                    new Quaternion(
                         row.get<double>(5, 0.0),
                         row.get<double>(6, 0.0),
                         row.get<double>(7, 0.0),
                         row.get<double>(8, 0.0)
                     )
-                )
-            )));
+                ))
+            ));
         }
 
         return s;

@@ -3,19 +3,48 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include "Object.hpp"
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
+#include <limits>
+#include <algorithm>
+#include "Object.hpp"
+#include "Pose.hpp"
 
 namespace ISM {
     class ObjectSet {
         public:
-            std::vector<boost::shared_ptr<Object> > objects;
+            std::vector<ObjectPtr> objects;
 
-            void insert(boost::shared_ptr<Object> o) {
-                objects.push_back(o);
-                std::cout<<"insert "<<o->toString()<<std::endl;
+            ~ObjectSet() {
+                std::cout<<"destroy object set"<<std::endl;
             }
 
-            std::vector<boost::shared_ptr<Object> > getObjects() { return this->objects; };
+            void insert(ObjectPtr o) {
+                objects.push_back(o);
+                std::cout<<"insert "<<(*o)<<std::endl;
+            }
+
+            std::vector<ObjectPtr> getObjects() { return this->objects; };
+
+            Point getReferencePoint() {
+                double maxX = std::numeric_limits<double>::min();
+                double minX = std::numeric_limits<double>::max();
+                double maxY = std::numeric_limits<double>::min();
+                double minY = std::numeric_limits<double>::max();
+                double maxZ = std::numeric_limits<double>::min();
+                double minZ = std::numeric_limits<double>::max();
+                BOOST_FOREACH(ObjectPtr o, this->objects) {
+                    PointPtr p = o->getPose()->point;
+                    maxX = std::max(p->x, maxX);
+                    minX = std::min(p->x, minX);
+                    maxY = std::max(p->y, maxY);
+                    minY = std::min(p->y, minY);
+                    maxZ = std::max(p->z, maxZ);
+                    minZ = std::min(p->z, minZ);
+                }
+
+                return Point((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
+            };
     };
+    typedef boost::shared_ptr<ObjectSet> ObjectSetPtr;
 }
