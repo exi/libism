@@ -10,18 +10,14 @@
 namespace ISM {
     class Trainer {
         TableHelper tableHelper;
-        std::string patternName;
         RecordedPatternPtr recordedPattern;
-        Point absoluteReferencePoint;
+        PointPtr absoluteReferencePoint;
         public:
             Trainer(std::string dbfilename = "record.sqlite");
-
-            ~Trainer();
 
             void trainPattern(std::string patternName);
 
         private:
             void learn();
-            void calculateAbsoluteReferencePoint();
     };
 }

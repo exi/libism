@@ -26,7 +26,7 @@ namespace ISM {
 
             std::vector<ObjectPtr> getObjects() { return this->objects; };
 
-            Point getReferencePoint() {
+            PointPtr getReferencePoint() {
                 double maxX = std::numeric_limits<double>::min();
                 double minX = std::numeric_limits<double>::max();
                 double maxY = std::numeric_limits<double>::min();
@@ -43,7 +43,7 @@ namespace ISM {
                     minZ = std::min(p->z, minZ);
                 }
 
-                return Point((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
+                return PointPtr(new Point((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0));
             };
     };
     typedef boost::shared_ptr<ObjectSet> ObjectSetPtr;
