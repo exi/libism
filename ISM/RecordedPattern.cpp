@@ -7,10 +7,11 @@ namespace ISM {
         this->y += p->y;
         this->z += p->z;
         this->objectSets.push_back(os);
+        this->minMaxFinder->add(p->x, p->y, p->z);
     }
 
     PointPtr RecordedPattern::getAbsoluteReferencePoint() {
-        double count = (double)this->objectSets.size();
+        double count = this->objectSets.size();
         return PointPtr(new Point(this->x / count, this->y / count, this->z / count));
     }
 }

@@ -35,8 +35,8 @@ namespace ISM {
         tableDefs["recorded_sets"] = "id INTEGER PRIMARY KEY, patternId INTEGER";
         tableDefs["recorded_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE";
         tableDefs["model_objects"] = "id INTEGER PRIMARY KEY, type TEXT UNIQUE";
-        tableDefs["model_votes"] = "id INTEGER PRIMARY KEY, objectId INTEGER, patternId INTEGER, observedId TEXT, radius FLOAT, qw FLOAT, qx FLOAT, qy FLOAT, qz FLOAT";
-        tableDefs["model_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE";
+        tableDefs["model_votes"] = "id INTEGER PRIMARY KEY, objectId INTEGER, patternId INTEGER, observedId TEXT, radius FLOAT, qw FLOAT, qx FLOAT, qy FLOAT, qz FLOAT, qw2 FLOAT, qx2 FLOAT, qy2 FLOAT, qz2 FLOAT";
+        tableDefs["model_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE, expectedObjectCount INTEGER, referencePointSpread FLOAT";
 
         typedef std::pair<std::string, std::string> pair_type;
         BOOST_FOREACH(pair_type p, tableDefs) {
@@ -59,7 +59,7 @@ namespace ISM {
     int TableHelper::getLastInsertId(std::string tablename) {
         int id = 0;
         try {
-            (*sqlite)<<"SELECT id FROM "<<tablename<<" ORDER BY ID DESC LIMIT 1;", into(id);
+            (*sqlite)<<"SELECT id FROM `"<<tablename<<"` ORDER BY ID DESC LIMIT 1;", into(id);
         } catch (soci_error e) {
             std::cerr<<"SQL error "<<e.what()<<std::endl;
             throw e;
@@ -74,22 +74,22 @@ namespace ISM {
 
     int TableHelper::insertRecordedObject(boost::shared_ptr<Object> o, int setId) {
         (*sqlite) << "INSERT INTO `recorded_objects` (type, observedId, setId, px, py, pz, qw, qx, qy, qz) values (:type, :oid, :setId, :px, :py, :pz, :qw, :qx, :qy, :qz);",
-            use(o->getType()),
-            use(o->getID()),
+            use(o->type),
+            use(o->observedId),
             use(setId),
-            use(o->getPose()->point->x),
-            use(o->getPose()->point->y),
-            use(o->getPose()->point->z),
-            use(o->getPose()->quat->w),
-            use(o->getPose()->quat->x),
-            use(o->getPose()->quat->y),
-            use(o->getPose()->quat->z);
+            use(o->pose->point->x),
+            use(o->pose->point->y),
+            use(o->pose->point->z),
+            use(o->pose->quat->w),
+            use(o->pose->quat->x),
+            use(o->pose->quat->y),
+            use(o->pose->quat->z);
 
         return this->getLastInsertId("recorded_objects");
     }
 
     int TableHelper::insertRecordedObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName) {
-        std::vector<boost::shared_ptr<Object> > objects = os->getObjects();
+        std::vector<boost::shared_ptr<Object> > objects = os->objects;
 
         int patternId = this->ensureRecordedPatternName(patternName);
 
@@ -154,7 +154,6 @@ namespace ISM {
                 ObjectPtr(
                     new Object(
                         row.get<std::string>(0, ""),
-                        row.get<std::string>(1, ""),
                         new Pose(
                             new Point(
                                 row.get<double>(2, 0.0),
@@ -167,7 +166,8 @@ namespace ISM {
                                 row.get<double>(7, 0.0),
                                 row.get<double>(8, 0.0)
                             )
-                        )
+                        ),
+                        row.get<std::string>(1, "")
                     )
                 )
             );
@@ -180,14 +180,64 @@ namespace ISM {
       Model
      *******************/
 
+    int TableHelper::insertModelVoteSpecifier(VoteSpecifierPtr vote) {
+        int patternId = this->ensureModelPatternName(vote->patternName);
+        int objectId = this->ensureModelObjectType(vote->objectType);
+
+        (*sqlite) << "INSERT INTO `model_votes` "<<
+            "(objectId, patternId, observedId, radius, qw, qx, qy, qz, qw2, qx2, qy2, qz2) values "<<
+            "(:objectId, :patternId, :observedId, :radius, :qw, :qx, :qy, :qz, :qw2, :qx2, :qy2, :qz2);",
+            use(objectId),
+            use(patternId),
+            use(vote->observedId),
+            use(vote->radius),
+            use(vote->objectToRefQuat->w),
+            use(vote->objectToRefQuat->x),
+            use(vote->objectToRefQuat->y),
+            use(vote->objectToRefQuat->z),
+            use(vote->refToObjectQuat->w),
+            use(vote->refToObjectQuat->x),
+            use(vote->refToObjectQuat->y),
+            use(vote->refToObjectQuat->z);
+
+        return this->getLastInsertId("model_votes");
+    }
+
     int TableHelper::ensureModelPatternName(std::string patternName) {
         int id = this->getModelPatternId(patternName);
         return id == 0 ? this->insertModelPattern(patternName) : id;
     }
 
+    int TableHelper::ensureModelObjectType(std::string objectType) {
+        int id = this->getModelObjectTypeId(objectType);
+        return id == 0 ? this->insertModelObjectType(objectType) : id;
+    }
+
     int TableHelper::insertModelPattern(std::string patternName) {
         (*sqlite) << "INSERT INTO `model_patterns` (name) VALUES (:patternName);", use(patternName);
         return this->getLastInsertId("model_patterns");
+    }
+
+    int TableHelper::upsertModelPattern(std::string patternName, int expectedObjectCount, double referencePointSpread) {
+        int patternId = this->getModelPatternId(patternName);
+        if (patternId == 0) {
+            (*sqlite) << "INSERT INTO `model_patterns` (name, expectedObjectCount, referencePointSpread) VALUES (:patternName, :objectCount, :refPointSpread);",
+                use(patternName),
+                use(expectedObjectCount),
+                use(referencePointSpread);
+        } else {
+            (*sqlite) << "REPLACE INTO `model_patterns` (id, name, expectedObjectCount, referencePointSpread) VALUES (:id, :patternName, :objectCount, :refPointSpread);",
+                use(patternId),
+                use(patternName),
+                use(expectedObjectCount),
+                use(referencePointSpread);
+        }
+        return this->getLastInsertId("model_patterns");
+    }
+
+    int TableHelper::insertModelObjectType(std::string objectType) {
+        (*sqlite) << "INSERT INTO `model_objects` (type) VALUES (:objectType);", use(objectType);
+        return this->getLastInsertId("model_objects");
     }
 
     int TableHelper::getModelPatternId(std::string patternName) {
@@ -199,5 +249,62 @@ namespace ISM {
         } else {
             return 0;
         }
+    }
+
+    int TableHelper::getModelObjectTypeId(std::string objectType) {
+        int id;
+        indicator ind;
+        (*sqlite) << "SELECT id FROM `model_objects` WHERE type = :objectType;", into(id, ind), use(objectType);
+        if ((*sqlite).got_data() && ind == i_ok) {
+            return id;
+        } else {
+            return 0;
+        }
+    }
+
+    objectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes) {
+        objectTypeToVoteMap voteSpecifierMap;
+        BOOST_FOREACH(std::string objectType, objectTypes) {
+            int objectId = getModelObjectTypeId(objectType);
+            rowset<row> rs = ((*sqlite).prepare<<
+                "SELECT radius, name, type, observedId, qw, qx, qy, qz, qw2, qx2, qy2, qz2 "<<
+                "FROM `model_votes` AS v "<<
+                "JOIN `model_objects` AS o ON v.objectId = o.id "<<
+                "JOIN `model_patterns` AS p ON v.patternId = p.id "<<
+                "WHERE objectId = :objectId;",
+                use(objectId)
+            );
+            std::vector<VoteSpecifierPtr> specifiers;
+            BOOST_FOREACH(row const& row, rs) {
+                VoteSpecifierPtr vote(
+                    new VoteSpecifier(
+                        QuaternionPtr(
+                            new Quaternion(
+                                row.get<double>(4, 0.0),
+                                row.get<double>(5, 0.0),
+                                row.get<double>(6, 0.0),
+                                row.get<double>(7, 0.0)
+                            )
+                        ),
+                        QuaternionPtr(
+                            new Quaternion(
+                                row.get<double>(8, 0.0),
+                                row.get<double>(9, 0.0),
+                                row.get<double>(10, 0.0),
+                                row.get<double>(11, 0.0)
+                            )
+                        ),
+                        row.get<double>(0, 0.0),
+                        row.get<std::string>(1, ""),
+                        row.get<std::string>(2, ""),
+                        row.get<std::string>(3, "")
+                    )
+                );
+                specifiers.push_back(vote);
+            }
+            voteSpecifierMap[objectType] = specifiers;
+        };
+
+        return voteSpecifierMap;
     }
 }

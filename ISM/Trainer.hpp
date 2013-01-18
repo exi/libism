@@ -9,7 +9,7 @@
 
 namespace ISM {
     class Trainer {
-        TableHelper tableHelper;
+        TableHelperPtr tableHelper;
         RecordedPatternPtr recordedPattern;
         PointPtr absoluteReferencePoint;
         public:

@@ -3,25 +3,47 @@
 typedef Eigen::Quaternion<double> EQuat;
 typedef Eigen::Vector3d Vector;
 namespace ISM {
-    VoteSpecifierPtr MathHelper::getVoteSpecifierToPoint(ObjectPtr o, PointPtr refPoint) {
-        Vector objectPose = getPoseVectorFromObject(o);
-        Vector objectPoint = pointToVector(o->getPose()->point);
-        Vector objectToPoint = pointToVector(refPoint) - objectPoint;
-        EQuat ret;
-        ret.setFromTwoVectors(objectPose, objectToPoint);
-        return VoteSpecifierPtr(new VoteSpecifier(eigenQuatToQuat(ret), objectToPoint.norm(), o));
+    VoteSpecifierPtr MathHelper::getVoteSpecifierToPoint(PosePtr pose, PointPtr refPoint) {
+        Vector objectPose = getPoseVectorFromPose(pose);
+        Vector objectToPoint = pointToVector(refPoint) - pointToVector(pose->point);
+        std::cout<<"Object to point "<<vectorToPoint(objectToPoint * -1.0)<<std::endl;
+        EQuat otp = vectorRotationToEigenQuat(objectPose, objectToPoint);
+        EQuat pto = vectorRotationToEigenQuat(getViewportVector(), objectToPoint * -1.0);
+        return VoteSpecifierPtr(
+            new VoteSpecifier(
+                eigenQuatToQuat(otp),
+                eigenQuatToQuat(pto),
+                objectToPoint.norm()
+            )
+        );
     }
 
-    PointPtr MathHelper::projectVoteOntoPoint(VoteSpecifierPtr vote) {
-        Vector objectPose = getPoseVectorFromObject(vote->object) * vote->radius;
-        Vector objectPoint = pointToVector(vote->object->getPose()->point);
-        EQuat rotation = quatToEigenQuat(vote->quat);
+    PosePtr MathHelper::getReferencePose(PosePtr origin, PointPtr refPoint, QuaternionPtr refToOriginQuat) {
+        Vector pointToOrigin = pointToVector(origin->point) - pointToVector(refPoint);
+        EQuat rotation = quatToEigenQuat(refToOriginQuat).inverse();
+        Vector refPointPoseVector = rotation._transformVector(pointToOrigin);
+        return PosePtr(
+            new Pose(
+                refPoint,
+                eigenQuatToQuat(vectorRotationToEigenQuat(getViewportVector(), refPointPoseVector))
+            )
+        );
+    }
+
+    PointPtr MathHelper::applyQuatAndRadiusToPose(PosePtr pose, QuaternionPtr quat, double radius) {
+        return vectorToPoint(applyQuatAndRadiusToPoseV(pose, quat, radius));
+    }
+
+    Vector MathHelper::applyQuatAndRadiusToPoseV(PosePtr pose, QuaternionPtr quat, double radius) {
+        Vector objectPose = getPoseVectorFromPose(pose) * radius;
+        Vector objectPoint = pointToVector(pose->point);
+        EQuat rotation = quatToEigenQuat(quat);
         Vector projectionVector = rotation._transformVector(objectPose);
-        return vectorToPoint(objectPoint + projectionVector);
+        return objectPoint + projectionVector;
     }
 
-    Vector MathHelper::getPoseVectorFromObject(ObjectPtr o) {
-        EQuat rotation = quatToEigenQuat(o->getPose()->quat);
+    Vector MathHelper::getPoseVectorFromPose(PosePtr pose) {
+        EQuat rotation = quatToEigenQuat(pose->quat);
         Vector viewport = getViewportVector();
         return rotation._transformVector(viewport);
     }
@@ -32,6 +54,12 @@ namespace ISM {
 
     Vector MathHelper::pointToVector(PointPtr p) {
         return Vector(p->x, p->y, p->z);
+    }
+
+    EQuat MathHelper::vectorRotationToEigenQuat(Vector v1, Vector v2) {
+        EQuat q;
+        q.setFromTwoVectors(v1, v2);
+        return q;
     }
 
     PointPtr MathHelper::vectorToPoint(Vector v) {

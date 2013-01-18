@@ -7,16 +7,27 @@
 
 namespace ISM {
     struct VoteSpecifier {
-        QuaternionPtr quat;
+        QuaternionPtr objectToRefQuat;
+        QuaternionPtr refToObjectQuat;
         double radius;
-        ObjectPtr object;
         std::string patternName;
-        VoteSpecifier(QuaternionPtr quat, double radius, ObjectPtr object):
-            quat(quat), radius(radius), object(object) {};
-
-        void setPatternName(std::string patternName) {
-            this->patternName = patternName;
-        }
+        std::string objectType;
+        std::string observedId;
+        VoteSpecifier(QuaternionPtr objectToRefQuat, QuaternionPtr refToObjectQuat, double radius):
+            objectToRefQuat(objectToRefQuat), refToObjectQuat(refToObjectQuat), radius(radius) {};
+        VoteSpecifier(
+                QuaternionPtr objectToRefQuat,
+                QuaternionPtr refToObjectQuat,
+                double radius,
+                std::string patternName,
+                std::string objectType,
+                std::string observedId):
+            objectToRefQuat(objectToRefQuat),
+            refToObjectQuat(refToObjectQuat),
+            radius(radius),
+            patternName(patternName),
+            objectType(objectType),
+            observedId(observedId) {};
     };
     typedef boost::shared_ptr<VoteSpecifier> VoteSpecifierPtr;
     std::ostream& operator<<(std::ostream &strm, const ISM::VoteSpecifier &v);

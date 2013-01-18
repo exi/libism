@@ -8,7 +8,7 @@
 
 namespace ISM {
     class Recorder {
-        TableHelper tableHelper;
+        TableHelperPtr tableHelper;
         public:
             Recorder(std::string dbfilename = "record.sqlite");
 

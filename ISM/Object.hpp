@@ -9,28 +9,14 @@
 namespace ISM {
     class Object {
         public:
-            std::string id;
             std::string type;
+            std::string observedId;
             PosePtr pose;
 
-            Object(): id(""), type("") {};
-            Object(std::string id, std::string type, PosePtr pose): id(id), type(type), pose(pose) {};
-            Object(std::string id, std::string type, Pose* pose): id(id), type(type) {
+            Object(std::string type, PosePtr pose, std::string observedId = ""): type(type), observedId(observedId), pose(pose) {};
+            Object(std::string type, Pose* pose, std::string observedId = ""): type(type), observedId(observedId) {
                 this->pose.reset(pose);
             };
-
-            virtual ~Object() {
-                std::cout<<"Object "<<this->id<<" destroyed"<<std::endl;
-            }
-
-            void setPose(PosePtr p) { this->pose = p; };
-            void setID(std::string id) { this->id = id; };
-            void setType(std::string type) { this->type = type; };
-            PosePtr getPose() const { return this->pose; };
-            std::string getID() const { return this->id; };
-            std::string getType() const { return this->type; };
-
-
     };
 
     typedef boost::shared_ptr<Object> ObjectPtr;

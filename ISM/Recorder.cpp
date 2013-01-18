@@ -2,7 +2,8 @@
 #include <vector>
 
 namespace ISM {
-    Recorder::Recorder(std::string dbfilename): tableHelper(dbfilename) {
+    Recorder::Recorder(std::string dbfilename) {
+        this->tableHelper.reset(new TableHelper(dbfilename));
     }
 
     Recorder::~Recorder() {
@@ -11,7 +12,6 @@ namespace ISM {
 
     void Recorder::insert(boost::shared_ptr<ObjectSet> set, std::string patternName) {
         std::cout<<"inserting set for pattern "<<patternName<<". With Objects:"<<std::endl;
-        this->tableHelper.insertRecordedObjectSet(set, patternName);
+        this->tableHelper->insertRecordedObjectSet(set, patternName);
     }
-
 }
