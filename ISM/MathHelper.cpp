@@ -1,12 +1,14 @@
 #include "MathHelper.hpp"
 
+#include <boost/math/constants/constants.hpp>
+
 typedef Eigen::Quaternion<double> EQuat;
 typedef Eigen::Vector3d Vector;
 namespace ISM {
     VoteSpecifierPtr MathHelper::getVoteSpecifierToPoint(PosePtr pose, PointPtr refPoint) {
-        Vector objectPose = getPoseVectorFromPose(pose);
+        Vector objectPose = getPoseVectorFromQuat(pose->quat);
         Vector objectToPoint = pointToVector(refPoint) - pointToVector(pose->point);
-        std::cout<<"Object to point "<<vectorToPoint(objectToPoint * -1.0)<<std::endl;
+        std::cout<<"Object to point "<<vectorToPoint(objectToPoint)<<std::endl;
         EQuat otp = vectorRotationToEigenQuat(objectPose, objectToPoint);
         EQuat pto = vectorRotationToEigenQuat(getViewportVector(), objectToPoint * -1.0);
         return VoteSpecifierPtr(
@@ -35,15 +37,15 @@ namespace ISM {
     }
 
     Vector MathHelper::applyQuatAndRadiusToPoseV(PosePtr pose, QuaternionPtr quat, double radius) {
-        Vector objectPose = getPoseVectorFromPose(pose) * radius;
+        Vector objectPose = getPoseVectorFromQuat(pose->quat) * radius;
         Vector objectPoint = pointToVector(pose->point);
         EQuat rotation = quatToEigenQuat(quat);
         Vector projectionVector = rotation._transformVector(objectPose);
         return objectPoint + projectionVector;
     }
 
-    Vector MathHelper::getPoseVectorFromPose(PosePtr pose) {
-        EQuat rotation = quatToEigenQuat(pose->quat);
+    Vector MathHelper::getPoseVectorFromQuat(QuaternionPtr quat) {
+        EQuat rotation = quatToEigenQuat(quat);
         Vector viewport = getViewportVector();
         return rotation._transformVector(viewport);
     }
@@ -74,5 +76,13 @@ namespace ISM {
 
     QuaternionPtr MathHelper::eigenQuatToQuat(EQuat q) {
         return QuaternionPtr(new Quaternion(q.w(), q.x(), q.y(), q.z()));
+    }
+
+    double MathHelper::deg2rad(double deg) {
+        return deg * (boost::math::constants::pi<double>() / 180.0);
+    }
+
+    double MathHelper::rad2deg(double rad) {
+        return rad * (180.0 / boost::math::constants::pi<double>());
     }
 }

@@ -262,8 +262,30 @@ namespace ISM {
         }
     }
 
-    objectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes) {
-        objectTypeToVoteMap voteSpecifierMap;
+    PatternNameToPatternMap TableHelper::getPatternDefinitionsByName(std::set<std::string> patternNames) {
+        PatternNameToPatternMap patterns;
+        BOOST_FOREACH(std::string patternName, patternNames) {
+            int expectedObjectCount;
+            indicator indEOC;
+            double referencePointSpread;
+            indicator indRPS;
+            (*sqlite) <<
+                "SELECT expectedObjectCount, referencePointSpread "<<
+                "FROM `model_patterns` "<<
+                "WHERE name = :patternName LIMIT 1;",
+                into(expectedObjectCount, indEOC),
+                into(referencePointSpread, indRPS),
+                use(patternName);
+            if ((*sqlite).got_data() && indEOC == i_ok && indRPS == i_ok) {
+                patterns[patternName] = PatternPtr(new Pattern(patternName, expectedObjectCount, referencePointSpread));
+            }
+        }
+
+        return patterns;
+    }
+
+    ObjectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes) {
+        ObjectTypeToVoteMap voteSpecifierMap;
         BOOST_FOREACH(std::string objectType, objectTypes) {
             int objectId = getModelObjectTypeId(objectType);
             rowset<row> rs = ((*sqlite).prepare<<

@@ -11,10 +11,12 @@
 #include "ObjectSet.hpp"
 #include "RecordedPattern.hpp"
 #include "VoteSpecifier.hpp"
+#include "Pattern.hpp"
 
 using namespace soci;
 namespace ISM {
-    typedef std::map<std::string, std::vector<VoteSpecifierPtr> > objectTypeToVoteMap;
+    typedef std::map<std::string, std::vector<VoteSpecifierPtr> > ObjectTypeToVoteMap;
+    typedef std::map<std::string, PatternPtr> PatternNameToPatternMap;
     class TableHelper {
         boost::shared_ptr<session> sqlite;
         public:
@@ -50,7 +52,9 @@ namespace ISM {
             int ensureModelPatternName(std::string patternName);
             int ensureModelObjectType(std::string objectType);
 
-            objectTypeToVoteMap getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes);
+            PatternNameToPatternMap getPatternDefinitionsByName(std::set<std::string> patternNames);
+
+            ObjectTypeToVoteMap getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes);
     };
 
     typedef boost::shared_ptr<TableHelper> TableHelperPtr;

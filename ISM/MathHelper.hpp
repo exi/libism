@@ -1,9 +1,9 @@
 #pragma once
 
+#include <Eigen/Geometry>
 #include "Pose.hpp"
 #include "Quaternion.hpp"
 #include "VoteSpecifier.hpp"
-#include <Eigen/Geometry>
 
 namespace ISM {
     class MathHelper {
@@ -13,11 +13,14 @@ namespace ISM {
             static PointPtr applyQuatAndRadiusToPose(PosePtr pose, QuaternionPtr quat, double radius);
             static Eigen::Vector3d applyQuatAndRadiusToPoseV(PosePtr pose, QuaternionPtr quat, double radius);
             static Eigen::Vector3d getViewportVector();
-            static Eigen::Vector3d getPoseVectorFromPose(PosePtr pose);
+            static Eigen::Vector3d getPoseVectorFromQuat(QuaternionPtr quat);
             static Eigen::Vector3d pointToVector(PointPtr p);
             static Eigen::Quaternion<double> vectorRotationToEigenQuat(Eigen::Vector3d v1, Eigen::Vector3d v2);
             static PointPtr vectorToPoint(Eigen::Vector3d v);
             static Eigen::Quaternion<double> quatToEigenQuat(QuaternionPtr q);
             static QuaternionPtr eigenQuatToQuat(Eigen::Quaternion<double> q);
+
+            static double deg2rad(double deg);
+            static double rad2deg(double rad);
     };
 }

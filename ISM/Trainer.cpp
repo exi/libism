@@ -45,8 +45,8 @@ namespace ISM {
                 std::cout<<"projected point: "<<MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius)<<std::endl;
                 std::cout<<"backprojected pose vector: "<<
                     MathHelper::vectorToPoint(
-                        MathHelper::getPoseVectorFromPose(
-                            MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat)
+                        MathHelper::getPoseVectorFromQuat(
+                            MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat)->quat
                         )
                     )<<std::endl;
                 this->tableHelper->insertModelVoteSpecifier(vote);
