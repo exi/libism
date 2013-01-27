@@ -20,7 +20,7 @@ namespace ISM {
         (*this->sqlite).close();
     }
 
-    void TableHelper::createTablesIfNecessary() {
+    void TableHelper::createTablesIfNecessary() const {
         std::set<std::string> tables;
 
         rowset<row> rs = (*sqlite).prepare<< "SELECT tbl_name FROM sqlite_master WHERE type = 'table';";
@@ -46,7 +46,7 @@ namespace ISM {
         }
     }
 
-    void TableHelper::createTable(std::string tablename, std::string sql) {
+    void TableHelper::createTable(const std::string& tablename, const std::string& sql) const {
         std::cout<<"creating "<<tablename<<" table"<<std::endl;
         try {
             (*sqlite).once<<"CREATE TABLE `"<<tablename<<"` ("<<sql<<");";
@@ -56,7 +56,7 @@ namespace ISM {
         }
     }
 
-    int TableHelper::getLastInsertId(std::string tablename) {
+    int TableHelper::getLastInsertId(const std::string& tablename) const {
         int id = 0;
         try {
             (*sqlite)<<"SELECT id FROM `"<<tablename<<"` ORDER BY ID DESC LIMIT 1;", into(id);
@@ -72,7 +72,7 @@ namespace ISM {
       Recorded
      *******************/
 
-    int TableHelper::insertRecordedObject(boost::shared_ptr<Object> o, int setId) {
+    int TableHelper::insertRecordedObject(const boost::shared_ptr<Object>& o, int setId) const {
         (*sqlite) << "INSERT INTO `recorded_objects` (type, observedId, setId, px, py, pz, qw, qx, qy, qz) values (:type, :oid, :setId, :px, :py, :pz, :qw, :qx, :qy, :qz);",
             use(o->type),
             use(o->observedId),
@@ -88,7 +88,7 @@ namespace ISM {
         return this->getLastInsertId("recorded_objects");
     }
 
-    int TableHelper::insertRecordedObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName) {
+    int TableHelper::insertRecordedObjectSet(const ObjectSetPtr& os, const std::string& patternName) const {
         std::vector<boost::shared_ptr<Object> > objects = os->objects;
 
         int patternId = this->ensureRecordedPatternName(patternName);
@@ -102,17 +102,17 @@ namespace ISM {
         return setId;
     }
 
-    int TableHelper::insertRecordedPattern(std::string patternName) {
+    int TableHelper::insertRecordedPattern(const std::string& patternName) const {
         (*sqlite) << "INSERT INTO `recorded_patterns` (name) VALUES (:patternName);", use(patternName);
         return this->getLastInsertId("recorded_patterns");
     }
 
-    int TableHelper::ensureRecordedPatternName(std::string patternName) {
+    int TableHelper::ensureRecordedPatternName(const std::string& patternName) const {
         int id = this->getRecordedPatternId(patternName);
         return id == 0 ? this->insertRecordedPattern(patternName) : id;
     }
 
-    int TableHelper::getRecordedPatternId(std::string patternName) {
+    int TableHelper::getRecordedPatternId(const std::string& patternName) const {
         int id;
         indicator ind;
         (*sqlite) << "SELECT id FROM `recorded_patterns` WHERE name = :name;", into(id, ind), use(patternName);
@@ -123,7 +123,7 @@ namespace ISM {
         }
     }
 
-    boost::shared_ptr<RecordedPattern> TableHelper::getRecordedPattern(std::string patternName) {
+    const RecordedPatternPtr TableHelper::getRecordedPattern(const std::string& patternName) const {
         boost::shared_ptr<RecordedPattern> pattern;
         int patternId = this->getRecordedPatternId(patternName);
 
@@ -140,7 +140,7 @@ namespace ISM {
         return pattern;
     }
 
-    boost::shared_ptr<ObjectSet> TableHelper::getRecordedObjectSet(int setId) {
+    const ObjectSetPtr TableHelper::getRecordedObjectSet(int setId) const {
         boost::shared_ptr<ObjectSet> s(new ObjectSet());
 
         rowset<row> rs = ((*sqlite).prepare<<
@@ -180,7 +180,7 @@ namespace ISM {
       Model
      *******************/
 
-    int TableHelper::insertModelVoteSpecifier(VoteSpecifierPtr vote) {
+    int TableHelper::insertModelVoteSpecifier(const VoteSpecifierPtr& vote) const {
         int patternId = this->ensureModelPatternName(vote->patternName);
         int objectId = this->ensureModelObjectType(vote->objectType);
 
@@ -203,22 +203,22 @@ namespace ISM {
         return this->getLastInsertId("model_votes");
     }
 
-    int TableHelper::ensureModelPatternName(std::string patternName) {
+    int TableHelper::ensureModelPatternName(const std::string& patternName) const {
         int id = this->getModelPatternId(patternName);
         return id == 0 ? this->insertModelPattern(patternName) : id;
     }
 
-    int TableHelper::ensureModelObjectType(std::string objectType) {
+    int TableHelper::ensureModelObjectType(const std::string& objectType) const {
         int id = this->getModelObjectTypeId(objectType);
         return id == 0 ? this->insertModelObjectType(objectType) : id;
     }
 
-    int TableHelper::insertModelPattern(std::string patternName) {
+    int TableHelper::insertModelPattern(const std::string& patternName) const {
         (*sqlite) << "INSERT INTO `model_patterns` (name) VALUES (:patternName);", use(patternName);
         return this->getLastInsertId("model_patterns");
     }
 
-    int TableHelper::upsertModelPattern(std::string patternName, int expectedObjectCount, double referencePointSpread) {
+    int TableHelper::upsertModelPattern(const std::string& patternName, int expectedObjectCount, double referencePointSpread) const {
         int patternId = this->getModelPatternId(patternName);
         if (patternId == 0) {
             (*sqlite) << "INSERT INTO `model_patterns` (name, expectedObjectCount, referencePointSpread) VALUES (:patternName, :objectCount, :refPointSpread);",
@@ -235,12 +235,12 @@ namespace ISM {
         return this->getLastInsertId("model_patterns");
     }
 
-    int TableHelper::insertModelObjectType(std::string objectType) {
+    int TableHelper::insertModelObjectType(const std::string& objectType) const {
         (*sqlite) << "INSERT INTO `model_objects` (type) VALUES (:objectType);", use(objectType);
         return this->getLastInsertId("model_objects");
     }
 
-    int TableHelper::getModelPatternId(std::string patternName) {
+    int TableHelper::getModelPatternId(const std::string& patternName) const {
         int id;
         indicator ind;
         (*sqlite) << "SELECT id FROM `model_patterns` WHERE name = :name;", into(id, ind), use(patternName);
@@ -251,7 +251,7 @@ namespace ISM {
         }
     }
 
-    int TableHelper::getModelObjectTypeId(std::string objectType) {
+    int TableHelper::getModelObjectTypeId(const std::string& objectType) const {
         int id;
         indicator ind;
         (*sqlite) << "SELECT id FROM `model_objects` WHERE type = :objectType;", into(id, ind), use(objectType);
@@ -262,7 +262,7 @@ namespace ISM {
         }
     }
 
-    PatternNameToPatternMap TableHelper::getPatternDefinitionsByName(std::set<std::string> patternNames) {
+    const PatternNameToPatternMap TableHelper::getPatternDefinitionsByName(const std::set<std::string>& patternNames) const {
         PatternNameToPatternMap patterns;
         BOOST_FOREACH(std::string patternName, patternNames) {
             int expectedObjectCount;
@@ -284,7 +284,7 @@ namespace ISM {
         return patterns;
     }
 
-    ObjectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes) {
+    const ObjectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(const std::set<std::string>& objectTypes) const {
         ObjectTypeToVoteMap voteSpecifierMap;
         BOOST_FOREACH(std::string objectType, objectTypes) {
             int objectId = getModelObjectTypeId(objectType);

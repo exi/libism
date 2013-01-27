@@ -25,36 +25,36 @@ namespace ISM {
 
             ~TableHelper();
 
-            void createTablesIfNecessary();
-            void createTable(std::string tablename, std::string sql);
+            void createTablesIfNecessary() const;
+            void createTable(const std::string& tablename, const std::string& sql) const;
 
-            int getLastInsertId(std::string tablename);
+            int getLastInsertId(const std::string& tablename) const;
 
             /* record */
-            int insertRecordedObject(boost::shared_ptr<Object> o, int setId);
-            int insertRecordedObjectSet(boost::shared_ptr<ObjectSet> os, std::string patternName);
-            int insertRecordedPattern(std::string patternName);
+            int insertRecordedObject(const boost::shared_ptr<Object>& o, int setId) const;
+            int insertRecordedObjectSet(const boost::shared_ptr<ObjectSet>& os, const std::string& patternName) const;
+            int insertRecordedPattern(const std::string& patternName) const;
 
-            int getRecordedPatternId(std::string patternName);
-            int ensureRecordedPatternName(std::string patternName);
+            int getRecordedPatternId(const std::string& patternName) const;
+            int ensureRecordedPatternName(const std::string& patternName) const;
 
-            boost::shared_ptr<RecordedPattern> getRecordedPattern(std::string patternName);
-            boost::shared_ptr<ObjectSet> getRecordedObjectSet(int setId);
+            const RecordedPatternPtr getRecordedPattern(const std::string& patternName) const;
+            const ObjectSetPtr getRecordedObjectSet(int setId) const;
 
             /* model */
-            int insertModelVoteSpecifier(VoteSpecifierPtr vote);
-            int insertModelPattern(std::string patternName);
-            int upsertModelPattern(std::string patternName, int expectedObjectCount, double referencePointSpread);
-            int insertModelObjectType(std::string objectType);
+            int insertModelVoteSpecifier(const VoteSpecifierPtr& vote) const;
+            int insertModelPattern(const std::string& patternName) const;
+            int upsertModelPattern(const std::string& patternName, int expectedObjectCount, double referencePointSpread) const;
+            int insertModelObjectType(const std::string& objectType) const;
 
-            int getModelPatternId(std::string patternName);
-            int getModelObjectTypeId(std::string objectType);
-            int ensureModelPatternName(std::string patternName);
-            int ensureModelObjectType(std::string objectType);
+            int getModelPatternId(const std::string& patternName) const;
+            int getModelObjectTypeId(const std::string& objectType) const;
+            int ensureModelPatternName(const std::string& patternName) const;
+            int ensureModelObjectType(const std::string& objectType) const;
 
-            PatternNameToPatternMap getPatternDefinitionsByName(std::set<std::string> patternNames);
+            const PatternNameToPatternMap getPatternDefinitionsByName(const std::set<std::string>& patternNames) const;
 
-            ObjectTypeToVoteMap getVoteSpecifiersForObjectTypes(std::set<std::string> objectTypes);
+            const ObjectTypeToVoteMap getVoteSpecifiersForObjectTypes(const std::set<std::string>& objectTypes) const;
     };
 
     typedef boost::shared_ptr<TableHelper> TableHelperPtr;

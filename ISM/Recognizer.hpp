@@ -5,42 +5,28 @@
 
 #include "ObjectSet.hpp"
 #include "TableHelper.hpp"
+#include "RecognitionResult.hpp"
 
 namespace ISM {
-    struct RecognitionResult {
-        std::string patternName;
-        ObjectSetPtr recognisedSet;
-        double certainty;
-    };
-
-    typedef boost::shared_ptr<RecognitionResult> RecognitionResultPtr;
-
-    struct VotedPose {
-        PosePtr pose;
-        VoteSpecifierPtr vote;
-        ObjectPtr source;
-        VotedPose(PosePtr pose, VoteSpecifierPtr vote, ObjectPtr source):
-            pose(pose), vote(vote), source(source) {};
-    };
-
-    typedef boost::shared_ptr<VotedPose> VotedPosePtr;
-
     class Recognizer {
         TableHelperPtr tableHelper;
         ObjectSetPtr inputSet;
+        int sensitivity;
 
         ObjectTypeToVoteMap objectDefinitions;
         PatternNameToPatternMap patternDefinitions;
 
         PosePtr referencePose;
 
+        std::vector<RecognitionResultPtr> results;
+
         public:
-            Recognizer(std::string dbfilename = "record.sqlite");
-            std::vector<RecognitionResultPtr> recognizePattern(ObjectSetPtr objectSet);
+            Recognizer(const std::string& dbfilename = "record.sqlite", int sensitivity = 5);
+            Recognizer(int sensitivity = 5, const std::string& dbfilename = "record.sqlite");
+            const std::vector<RecognitionResultPtr> recognizePattern(const ObjectSetPtr& objectSet);
 
         private:
             void calculateVotes();
-            void calculateReferencePose();
             void getPatternDefinitions();
             PosePtr calculatePoseFromVote(PosePtr pose, VoteSpecifierPtr vote);
     };

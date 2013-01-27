@@ -12,9 +12,15 @@ namespace ISM {
         public:
             std::vector<ObjectPtr> objects;
 
-            void insert(ObjectPtr o);
+            ObjectSet() {};
 
-            PointPtr getReferencePoint();
+            void insert(const ObjectPtr& o);
+
+            const PointPtr getReferencePoint() const;
     };
+
     typedef boost::shared_ptr<ObjectSet> ObjectSetPtr;
+
+    std::ostream& operator<<(std::ostream &strm, const ISM::ObjectSet &o);
+    std::ostream& operator<<(std::ostream &strm, const ISM::ObjectSetPtr &o);
 }

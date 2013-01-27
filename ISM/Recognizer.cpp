@@ -1,5 +1,4 @@
 #include "Recognizer.hpp"
-
 #include <map>
 #include <set>
 #include <vector>
@@ -7,13 +6,19 @@
 #include <boost/foreach.hpp>
 
 #include "MathHelper.hpp"
+#include "VotedPose.hpp"
+#include "VotingSpace.hpp"
 
 namespace ISM {
-    Recognizer::Recognizer(std::string dbfilename) {
+    Recognizer::Recognizer(const std::string& dbfilename, int sensitivity) : sensitivity(sensitivity) {
         this->tableHelper.reset(new TableHelper(dbfilename));
     }
 
-    std::vector<RecognitionResultPtr> Recognizer::recognizePattern(ObjectSetPtr objectSet) {
+    Recognizer::Recognizer(int sensitivity, const std::string& dbfilename) : sensitivity(sensitivity) {
+        this->tableHelper.reset(new TableHelper(dbfilename));
+    }
+
+    const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
         this->inputSet = objectSet;
         std::set<std::string> objectTypes;
         BOOST_FOREACH(ObjectPtr o, objectSet->objects) {
@@ -24,18 +29,16 @@ namespace ISM {
         this->getPatternDefinitions();
 
         this->calculateVotes();
-        this->calculateReferencePose();
-        std::vector<RecognitionResultPtr> ret;
-        return ret;
+        return this->results;
     }
 
     void Recognizer::calculateVotes() {
         //vote for each pattern separately
         std::map<PatternPtr, std::vector<VotedPosePtr> > votesMap;
 
-        BOOST_FOREACH(ObjectPtr object, this->inputSet->objects) {
+        for (ObjectPtr& object : this->inputSet->objects) {
             std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[object->type];
-            BOOST_FOREACH(VoteSpecifierPtr vote, votes) {
+            for (VoteSpecifierPtr& vote : votes) {
                 PatternPtr pattern = this->patternDefinitions[vote->patternName];
                 PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
 
@@ -43,20 +46,23 @@ namespace ISM {
                     votesMap[pattern] = std::vector<VotedPosePtr>();
                 }
 
-                VotedPosePtr v(new VotedPose(pose, vote, object));
+                VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
                 votesMap[pattern].push_back(v);
             }
         }
-        typedef std::pair<PatternPtr, std::vector<VotedPosePtr> > votesType;
-        BOOST_FOREACH(votesType v, votesMap) {
-            std::cout<<"voted for: "<<v.first<<std::endl;
-            BOOST_FOREACH(VotedPosePtr p, v.second) {
-                std::cout<<
-                    p->source->type<<";"<<
-                    p->pose->point<<";"<<
-                    MathHelper::vectorToPoint(MathHelper::getPoseVectorFromQuat(p->pose->quat))<<
-                    std::endl;
-            }
+
+        for (auto& votePair : votesMap) {
+            VotingSpace vs(votePair.second, this->sensitivity);
+            this->results.push_back(
+                RecognitionResultPtr(
+                    new RecognitionResult(
+                        votePair.first->name,
+                        vs.referencePose,
+                        vs.matchingObjects,
+                        vs.confidence
+                    )
+                )
+            );
         }
     }
 
@@ -75,11 +81,5 @@ namespace ISM {
         }
 
         this->patternDefinitions = this->tableHelper->getPatternDefinitionsByName(patternNames);
-    }
-
-    void Recognizer::calculateReferencePose() {
-        BOOST_FOREACH(ObjectPtr o, this->inputSet->objects) {
-            std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[o->type];
-        }
     }
 }
