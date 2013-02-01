@@ -8,7 +8,6 @@ namespace ISM {
     VoteSpecifierPtr MathHelper::getVoteSpecifierToPoint(const PosePtr& pose, const PointPtr& refPoint) {
         Vector objectPose = getPoseVectorFromQuat(pose->quat);
         Vector objectToPoint = pointToVector(refPoint) - pointToVector(pose->point);
-        std::cout<<"Object to point "<<vectorToPoint(objectToPoint)<<std::endl;
         EQuat otp = vectorRotationToEigenQuat(objectPose, objectToPoint);
         EQuat pto = vectorRotationToEigenQuat(getViewportVector(), objectToPoint * -1.0);
         return VoteSpecifierPtr(
@@ -88,6 +87,10 @@ namespace ISM {
         EQuat ret;
         ret.setFromTwoVectors(getViewportVector(), combined);
         return eigenQuatToQuat(ret.normalized());
+    }
+
+    QuaternionPtr MathHelper::normalize(const QuaternionPtr& quat) {
+        return eigenQuatToQuat(quatToEigenQuat(quat).normalized());
     }
 
     double MathHelper::deg2rad(double deg) {

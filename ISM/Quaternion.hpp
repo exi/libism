@@ -12,6 +12,7 @@ namespace ISM {
             double z;
     };
     typedef boost::shared_ptr<Quaternion> QuaternionPtr;
+
     std::ostream& operator<<(std::ostream &strm, const ISM::Quaternion &q);
     std::ostream& operator<<(std::ostream &strm, const ISM::QuaternionPtr &q);
 }

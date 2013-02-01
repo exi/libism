@@ -5,6 +5,7 @@
 #include <boost/math/constants/constants.hpp>
 
 using namespace ISM;
+
 int main (int argc, char** argv) {
     double directioncos = cos(0.0 * (boost::math::constants::pi<double>() / 180.0));
     double directionsin = sin(0.0 * (boost::math::constants::pi<double>() / 180.0));
@@ -13,13 +14,13 @@ int main (int argc, char** argv) {
 
     ObjectSetPtr set(new ObjectSet());
 
-    ObjectPtr o(new Object("testobj", new Pose(new Point(0.0, 0.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos))));
+    ObjectPtr o(new Object("testobj", new Pose(new Point(0.0, 0.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos)), "1"));
     set->insert(o);
 
-    o = ObjectPtr(new Object("testobj2", new Pose(new Point(10.0, 10.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos))));
+    o = ObjectPtr(new Object("testobj", new Pose(new Point(10.0, 10.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos)), "2"));
     set->insert(o);
 
-    o = ObjectPtr(new Object("testobj3", new Pose(new Point(10.0, 0.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos))));
+    o = ObjectPtr(new Object("testobj", new Pose(new Point(10.0, 0.0, 0.0), new Quaternion(directionsin, 0.0, 0.0, directioncos)), "3"));
     set->insert(o);
 
     r.insert(set, "demoSet");

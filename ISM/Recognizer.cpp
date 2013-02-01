@@ -10,11 +10,11 @@
 #include "VotingSpace.hpp"
 
 namespace ISM {
-    Recognizer::Recognizer(const std::string& dbfilename, int sensitivity) : sensitivity(sensitivity) {
+    Recognizer::Recognizer(const std::string& dbfilename, double sensitivity) : sensitivity(sensitivity) {
         this->tableHelper.reset(new TableHelper(dbfilename));
     }
 
-    Recognizer::Recognizer(int sensitivity, const std::string& dbfilename) : sensitivity(sensitivity) {
+    Recognizer::Recognizer(double sensitivity, const std::string& dbfilename) : sensitivity(sensitivity) {
         this->tableHelper.reset(new TableHelper(dbfilename));
     }
 

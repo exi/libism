@@ -20,6 +20,7 @@ namespace ISM {
             static Eigen::Quaternion<double> quatToEigenQuat(const QuaternionPtr& q);
             static QuaternionPtr eigenQuatToQuat(const Eigen::Quaternion<double>& q);
             static QuaternionPtr getAveragePose(const std::vector<QuaternionPtr>& poseQuats);
+            static QuaternionPtr normalize(const QuaternionPtr& quat);
 
             static double deg2rad(double deg);
             static double rad2deg(double rad);

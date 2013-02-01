@@ -1,4 +1,5 @@
 #include "ObjectSet.hpp"
+#include "MathHelper.hpp"
 
 namespace ISM {
     std::ostream& operator<<(std::ostream &strm, const ISM::ObjectSet &o) {
@@ -13,7 +14,8 @@ namespace ISM {
         return strm<<(*o);
     }
 
-    void ObjectSet::insert(const ObjectPtr& o) {
+    void ObjectSet::insert(ObjectPtr o) {
+        o->pose->quat = MathHelper::normalize(o->pose->quat);
         objects.push_back(o);
     }
 

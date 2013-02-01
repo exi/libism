@@ -12,6 +12,7 @@ namespace ISM {
             double z;
     };
     typedef boost::shared_ptr<Point> PointPtr;
+
     std::ostream& operator<<(std::ostream &strm, const ISM::Point &p);
     std::ostream& operator<<(std::ostream &strm, const ISM::PointPtr &p);
 }

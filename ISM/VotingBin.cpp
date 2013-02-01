@@ -4,12 +4,14 @@
 
 namespace ISM {
     void VotingBin::insert(const VotedPosePtr& vote) {
-        if (this->votes.find(vote->source) == this->votes.end()) {
+        std::map<ObjectPtr, VotedPosePtr>::iterator it = this->votes.find(vote->source);
+        if (it == this->votes.end()) {
             this->votes.insert(std::make_pair(vote->source, vote));
             this->value += vote->confidence;
         } else if (this->votes[vote->source]->confidence < vote->confidence) {
-            this->value -= this->votes[vote->source]->confidence;
-            this->votes[vote->source] = vote;
+            this->value -= it->second->confidence;
+            this->votes.erase(it);
+            this->votes.insert(std::make_pair(vote->source, vote));
             this->value += vote->confidence;
         }
     }
@@ -38,7 +40,9 @@ namespace ISM {
         ObjectSetPtr os(new ObjectSet());
 
         for (auto& item : this->votes) {
-            os->insert(item.first);
+            ObjectPtr o(new Object(*(item.first)));
+            o->observedId = item.second->vote->observedId;
+            os->insert(o);
         }
 
         return os;

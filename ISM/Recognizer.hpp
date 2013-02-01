@@ -11,7 +11,7 @@ namespace ISM {
     class Recognizer {
         TableHelperPtr tableHelper;
         ObjectSetPtr inputSet;
-        int sensitivity;
+        double sensitivity;
 
         ObjectTypeToVoteMap objectDefinitions;
         PatternNameToPatternMap patternDefinitions;
@@ -21,8 +21,8 @@ namespace ISM {
         std::vector<RecognitionResultPtr> results;
 
         public:
-            Recognizer(const std::string& dbfilename = "record.sqlite", int sensitivity = 5);
-            Recognizer(int sensitivity = 5, const std::string& dbfilename = "record.sqlite");
+            Recognizer(const std::string& dbfilename = "record.sqlite", double sensitivity = 5);
+            Recognizer(double sensitivity = 5, const std::string& dbfilename = "record.sqlite");
             const std::vector<RecognitionResultPtr> recognizePattern(const ObjectSetPtr& objectSet);
 
         private:

@@ -13,8 +13,13 @@ namespace ISM {
             std::vector<ObjectPtr> objects;
 
             ObjectSet() {};
+            ObjectSet(const ObjectSet& other) {
+                for (auto& objectptr : other.objects) {
+                    this->objects.push_back(ObjectPtr(new Object(*objectptr)));
+                }
+            }
 
-            void insert(const ObjectPtr& o);
+            void insert(ObjectPtr o);
 
             const PointPtr getReferencePoint() const;
     };

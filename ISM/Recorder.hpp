@@ -10,10 +10,10 @@ namespace ISM {
     class Recorder {
         TableHelperPtr tableHelper;
         public:
-            Recorder(std::string dbfilename = "record.sqlite");
+            Recorder(const std::string& dbfilename = "record.sqlite");
 
             ~Recorder();
 
-            void insert(boost::shared_ptr<ObjectSet> set, std::string patternName);
+            void insert(const ObjectSetPtr& set, const std::string& patternName);
     };
 }
