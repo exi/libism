@@ -13,6 +13,13 @@ namespace ISM {
         std::string patternName;
         std::string objectType;
         std::string observedId;
+        VoteSpecifier(const VoteSpecifier& other): radius(other.radius),
+                                                    patternName(other.patternName),
+                                                    objectType(other.objectType),
+                                                    observedId(other.observedId) {
+            objectToRefQuat = QuaternionPtr(new Quaternion(*(other.objectToRefQuat)));
+            refToObjectQuat = QuaternionPtr(new Quaternion(*(other.refToObjectQuat)));
+        }
         VoteSpecifier(QuaternionPtr objectToRefQuat, QuaternionPtr refToObjectQuat, double radius):
             objectToRefQuat(objectToRefQuat), refToObjectQuat(refToObjectQuat), radius(radius) {};
         VoteSpecifier(

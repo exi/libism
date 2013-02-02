@@ -12,8 +12,19 @@ namespace ISM {
         PosePtr referencePose;
         ObjectSetPtr recognizedSet;
         double confidence;
-        RecognitionResult(const std::string patternName, const PosePtr referencePose, const ObjectSetPtr recognizedSet, const double confidence) :
-            patternName(patternName), referencePose(referencePose), recognizedSet(recognizedSet), confidence(confidence) {};
+        std::vector<PointPtr> idealPoints;
+        RecognitionResult(
+                const std::string patternName,
+                const PosePtr referencePose,
+                const ObjectSetPtr recognizedSet,
+                const double confidence,
+                const std::vector<PointPtr> idealPoints
+                ) :
+            patternName(patternName),
+            referencePose(referencePose),
+            recognizedSet(recognizedSet),
+            confidence(confidence),
+            idealPoints(idealPoints) {};
     };
 
     typedef boost::shared_ptr<RecognitionResult> RecognitionResultPtr;

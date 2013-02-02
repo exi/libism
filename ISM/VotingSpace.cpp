@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+#include <map>
 #include <algorithm>
 #include "MathHelper.hpp"
 
@@ -16,25 +17,26 @@ namespace ISM {
             bin->insert(vote);
         }
 
-        double maxValue = -1;
-        VotingBinPtr maxBin;
+        double confidence = -1.0;
+        VotingBinResultPtr maxBin;
 
         for (auto& xitem : this->voteMap) {
             for (auto& yitem : xitem.second) {
                 for (auto& zitem : yitem.second) {
-                    VotingBinPtr bin = zitem.second;
-                    if (bin->value > maxValue) {
-                        maxValue = bin->value;
-                        maxBin = bin;
+                    VotingBinResultPtr res = zitem.second->getResults(binSize);
+                    if (res->confidence > confidence) {
+                        confidence = res->confidence;
+                        maxBin = res;
                     }
                 }
             }
         }
 
-        if (maxValue != -1) {
-            this->referencePose = maxBin->getReferencePose();
-            this->confidence = maxValue;
-            this->matchingObjects = maxBin->getObjectSet();
+        this->confidence = confidence;
+        if (confidence != -1.0) {
+            this->referencePose = maxBin->referencePose;
+            this->matchingObjects = maxBin->objects;
+            this->idealPoints = maxBin->idealPoints;
         }
     }
 

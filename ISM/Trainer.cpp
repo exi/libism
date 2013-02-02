@@ -49,6 +49,12 @@ namespace ISM {
                             MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat)->quat
                         )
                     )<<std::endl;
+                std::cout<<"pointprojection: "<<
+                    MathHelper::applyQuatAndRadiusToPose(
+                        MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat),
+                        vote->refToObjectQuat,
+                        vote->radius
+                    )<<std::endl;
                 this->tableHelper->insertModelVoteSpecifier(vote);
             }
         }

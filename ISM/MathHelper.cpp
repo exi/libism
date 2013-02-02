@@ -93,6 +93,10 @@ namespace ISM {
         return eigenQuatToQuat(quatToEigenQuat(quat).normalized());
     }
 
+    double MathHelper::getDistanceBetweenPoints(const PointPtr& p1, const PointPtr& p2) {
+        return (pointToVector(p1) - pointToVector(p2)).norm();
+    }
+
     double MathHelper::deg2rad(double deg) {
         return deg * (boost::math::constants::pi<double>() / 180.0);
     }

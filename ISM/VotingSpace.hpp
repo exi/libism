@@ -17,6 +17,7 @@ namespace ISM {
             PosePtr referencePose;
             ObjectSetPtr matchingObjects;
             double confidence;
+            std::vector<PointPtr> idealPoints;
 
             VotingSpace(const std::vector<VotedPosePtr>& votes, double binSize);
         private:

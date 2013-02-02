@@ -11,14 +11,15 @@
 
 namespace ISM {
     Recognizer::Recognizer(const std::string& dbfilename, double sensitivity) : sensitivity(sensitivity) {
-        this->tableHelper.reset(new TableHelper(dbfilename));
+        this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
     }
 
     Recognizer::Recognizer(double sensitivity, const std::string& dbfilename) : sensitivity(sensitivity) {
-        this->tableHelper.reset(new TableHelper(dbfilename));
+        this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
     }
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
+        this->results.clear();
         this->inputSet = objectSet;
         std::set<std::string> objectTypes;
         BOOST_FOREACH(ObjectPtr o, objectSet->objects) {
@@ -53,16 +54,19 @@ namespace ISM {
 
         for (auto& votePair : votesMap) {
             VotingSpace vs(votePair.second, this->sensitivity);
-            this->results.push_back(
-                RecognitionResultPtr(
-                    new RecognitionResult(
-                        votePair.first->name,
-                        vs.referencePose,
-                        vs.matchingObjects,
-                        vs.confidence
+            if (vs.confidence != -1.0) {
+                this->results.push_back(
+                    RecognitionResultPtr(
+                        new RecognitionResult(
+                            votePair.first->name,
+                            vs.referencePose,
+                            vs.matchingObjects,
+                            vs.confidence,
+                            vs.idealPoints
+                        )
                     )
-                )
-            );
+                );
+            }
         }
     }
 

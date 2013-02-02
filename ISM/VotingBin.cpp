@@ -1,50 +1,116 @@
 #include "VotingBin.hpp"
 #include "MinMaxFinder.hpp"
 #include "MathHelper.hpp"
+#include <map>
 
 namespace ISM {
     void VotingBin::insert(const VotedPosePtr& vote) {
-        std::map<ObjectPtr, VotedPosePtr>::iterator it = this->votes.find(vote->source);
-        if (it == this->votes.end()) {
-            this->votes.insert(std::make_pair(vote->source, vote));
-            this->value += vote->confidence;
-        } else if (this->votes[vote->source]->confidence < vote->confidence) {
-            this->value -= it->second->confidence;
-            this->votes.erase(it);
-            this->votes.insert(std::make_pair(vote->source, vote));
-            this->value += vote->confidence;
-        }
-    }
-
-    const PosePtr VotingBin::getReferencePose() const {
-        MinMaxFinder m;
-
-        std::vector<QuaternionPtr> quats;
-
-        for (auto& mapItem : this->votes) {
-            ObjectPtr o = mapItem.first;
-            VotedPosePtr v = mapItem.second;
-            m.add(v->pose->point->x, v->pose->point->y, v->pose->point->z);
-            quats.push_back(v->pose->quat);
+        auto typeIt = votes.find(vote->source->type);
+        if (typeIt == votes.end()) {
+            typeIt = votes.insert(std::make_pair(vote->source->type, IdToVoteMap())).first;
         }
 
-        return PosePtr(
-            new Pose(
-                m.getMiddlePoint(),
-                MathHelper::getAveragePose(quats)
-            )
-        );
+        auto idIt = typeIt->second.find(vote->vote->observedId);
+        if (idIt == typeIt->second.end()) {
+            idIt = typeIt->second.insert(std::make_pair(vote->vote->observedId, std::vector<VotedPosePtr>())).first;
+        }
+
+        idIt->second.push_back(vote);
     }
 
-    const ObjectSetPtr VotingBin::getObjectSet() const {
+    VotingBinResultPtr VotingBin::getResults(double sensitivity) {
+        bool finished = false;
+        auto typeIt = votes.begin();
+        auto typeItEnd = votes.end();
+        for (; typeIt != typeItEnd && !finished; typeIt++) {
+            auto idIt = typeIt->second.begin();
+            auto idItEnd = typeIt->second.end();
+            for (; idIt != idItEnd && !finished; idIt++) {
+                auto voteIt = idIt->second.begin();
+                auto voteItEnd = idIt->second.end();
+                for (; voteIt != voteItEnd && !finished; voteIt++) {
+                    fittingPose = (*voteIt)->pose;
+                    currentType = typeIt;
+                    currentId = idIt;
+                    fittingStack = std::stack<VotedPosePtr>();
+                    fittingStack.push(*voteIt);
+                    takenSources.clear();
+                    takenSources.insert((*voteIt)->source);
+                    idealPoints.clear();
+                    PointPtr projectedPoint = MathHelper::applyQuatAndRadiusToPose(
+                        fittingPose,
+                        (*voteIt)->vote->refToObjectQuat,
+                        (*voteIt)->vote->radius
+                    );
+                    idealPoints.push_back(projectedPoint);
+                    finished = searchFit(sensitivity);
+                }
+            }
+        }
+
         ObjectSetPtr os(new ObjectSet());
+        if (finished) {
+            double confidence = 0;
+            while (!fittingStack.empty()) {
+                VotedPosePtr p = fittingStack.top();
+                fittingStack.pop();
+                confidence += p->confidence;
+                ObjectPtr o(new Object(*(p->source)));
+                o->observedId = p->vote->observedId;
+                os->insert(o);
+            }
 
-        for (auto& item : this->votes) {
-            ObjectPtr o(new Object(*(item.first)));
-            o->observedId = item.second->vote->observedId;
-            os->insert(o);
+            return VotingBinResultPtr(new VotingBinResult(os, fittingPose, confidence, idealPoints));
+        } else {
+            PosePtr p;
+            return VotingBinResultPtr(new VotingBinResult(os, p, -1.0));
         }
+    }
 
-        return os;
+    bool VotingBin::searchFit(double sensitivity) {
+        auto typeIt = votes.begin();
+        auto typeItEnd = votes.end();
+
+        for (; typeIt != typeItEnd; typeIt++) {
+            auto idIt = typeIt->second.begin();
+            auto idItEnd = typeIt->second.end();
+            for (; idIt != idItEnd; idIt++) {
+                if (typeIt == currentType && idIt == currentId) {
+                    continue;
+                }
+
+                auto voteIt = idIt->second.begin();
+                auto voteItEnd = idIt->second.end();
+                VotedPosePtr vote;
+                for (; voteIt != voteItEnd; voteIt++) {
+                    vote = *voteIt;
+
+                    if (takenSources.find(vote->source) != takenSources.end()) {
+                        continue;
+                    }
+
+                    PointPtr projectedPoint = MathHelper::applyQuatAndRadiusToPose(
+                        fittingPose,
+                        vote->vote->refToObjectQuat,
+                        vote->vote->radius
+                    );
+
+                    double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
+                    if (distance <= sensitivity) {
+                        idealPoints.push_back(projectedPoint);
+                        //found fit
+                        break;
+                    }
+                }
+
+                if (voteIt == voteItEnd) {
+                    return false;
+                } else {
+                    takenSources.insert(vote->source);
+                    fittingStack.push(vote);
+                }
+            }
+        }
+        return true;
     }
 }

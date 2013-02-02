@@ -13,18 +13,18 @@ namespace ISM {
             QuaternionPtr quat;
 
             Pose() {
-                this->point.reset(new Point(0, 0, 0));
-                this->quat.reset(new Quaternion(0, 0, 0, 0));
+                this->point = PointPtr(new Point(0, 0, 0));
+                this->quat = QuaternionPtr(new Quaternion(0, 0, 0, 0));
             };
 
             Pose(const Pose& other) {
-                this->point.reset(new Point(*(other.point)));
-                this->quat.reset(new Quaternion(*(other.quat)));
+                this->point = PointPtr(new Point(*(other.point)));
+                this->quat = QuaternionPtr(new Quaternion(*(other.quat)));
             }
 
             Pose(Point *p, Quaternion* q) {
-                this->point.reset(p);
-                this->quat.reset(q);
+                this->point = PointPtr(p);
+                this->quat = QuaternionPtr(q);
             };
 
             Pose(PointPtr p, QuaternionPtr quat): point(p), quat(quat) {};

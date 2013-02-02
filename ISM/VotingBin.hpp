@@ -4,17 +4,31 @@
 #include "VotedPose.hpp"
 #include "ObjectSet.hpp"
 #include "Pose.hpp"
+#include "Pattern.hpp"
+#include "VotingBinResult.hpp"
+#include <stack>
+#include <set>
+#include <vector>
 
 namespace ISM {
     class VotingBin {
         public:
-            std::map<ObjectPtr, VotedPosePtr> votes;
-            double value;
-            VotingBin():value(0) {};
+            typedef std::map<std::string, std::vector<VotedPosePtr> > IdToVoteMap;
+            typedef std::map<std::string, IdToVoteMap> TypeToInnerMap;
+            TypeToInnerMap votes;
+            VotingBin() {};
 
             void insert(const VotedPosePtr& vote);
-            const PosePtr getReferencePose() const;
-            const ObjectSetPtr getObjectSet() const;
+            VotingBinResultPtr getResults(double sensitivity);
+        private:
+            std::stack<VotedPosePtr> fittingStack;
+            std::vector<PointPtr> idealPoints;
+            TypeToInnerMap::iterator currentType;
+            IdToVoteMap::iterator currentId;
+            std::set<ObjectPtr> takenSources;
+            PosePtr fittingPose;
+            bool searchFit(double sensitivity);
+            void addVoteToStack(const VotedPosePtr& v);
     };
 
     typedef boost::shared_ptr<VotingBin> VotingBinPtr;

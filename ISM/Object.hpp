@@ -14,13 +14,13 @@ namespace ISM {
             PosePtr pose;
 
             Object(const Object& other): type(other.type), observedId(other.observedId) {
-                pose = PosePtr(new Pose(*other.pose));
+                this->pose = PosePtr(new Pose(*other.pose));
             };
 
             Object(std::string type, PosePtr pose, std::string observedId = ""): type(type), observedId(observedId), pose(pose) {};
 
             Object(std::string type, Pose* pose, std::string observedId = ""): type(type), observedId(observedId) {
-                this->pose.reset(pose);
+                this->pose = PosePtr(pose);
             };
     };
 
