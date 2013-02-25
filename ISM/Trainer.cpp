@@ -15,6 +15,14 @@ namespace ISM {
         this->tableHelper.reset(new TableHelper(dbfilename));
     }
 
+    void Trainer::trainPattern() {
+        std::vector<std::string> patternNames = this->tableHelper->getRecordedPatternNames();
+        for (auto& name : patternNames) {
+            std::cout<<"training "<<name<<std::endl;
+            this->trainPattern(name);
+        }
+    }
+
     void Trainer::trainPattern(std::string patternName) {
         boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
         if (!r) {
@@ -40,21 +48,7 @@ namespace ISM {
                 vote->patternName = this->recordedPattern->name;
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
-                std::cout<<"processing "<<o<<std::endl;
-                std::cout<<"projecting "<<vote<<std::endl;
-                std::cout<<"projected point: "<<MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius)<<std::endl;
-                std::cout<<"backprojected pose vector: "<<
-                    MathHelper::vectorToPoint(
-                        MathHelper::getPoseVectorFromQuat(
-                            MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat)->quat
-                        )
-                    )<<std::endl;
-                std::cout<<"pointprojection: "<<
-                    MathHelper::applyQuatAndRadiusToPose(
-                        MathHelper::getReferencePose(o->pose, referencePoint, vote->refToObjectQuat),
-                        vote->refToObjectQuat,
-                        vote->radius
-                    )<<std::endl;
+                std::cout<<o<<std::endl;
                 this->tableHelper->insertModelVoteSpecifier(vote);
             }
         }

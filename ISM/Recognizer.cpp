@@ -37,18 +37,22 @@ namespace ISM {
         //vote for each pattern separately
         std::map<PatternPtr, std::vector<VotedPosePtr> > votesMap;
 
+        std::vector<PointPtr> votedPoints;
         for (ObjectPtr& object : this->inputSet->objects) {
             std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[object->type];
             for (VoteSpecifierPtr& vote : votes) {
-                PatternPtr pattern = this->patternDefinitions[vote->patternName];
-                PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
+                if (object->observedId == "" || object->observedId == vote->observedId) {
+                    PatternPtr pattern = this->patternDefinitions[vote->patternName];
+                    PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
 
-                if (votesMap.find(pattern) == votesMap.end()) {
-                    votesMap[pattern] = std::vector<VotedPosePtr>();
+                    if (votesMap.find(pattern) == votesMap.end()) {
+                        votesMap[pattern] = std::vector<VotedPosePtr>();
+                    }
+
+                    VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
+                    votesMap[pattern].push_back(v);
+                    votedPoints.push_back(pose->point);
                 }
-
-                VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
-                votesMap[pattern].push_back(v);
             }
         }
 
@@ -62,7 +66,8 @@ namespace ISM {
                             vs.referencePose,
                             vs.matchingObjects,
                             vs.confidence,
-                            vs.idealPoints
+                            vs.idealPoints,
+                            votedPoints
                         )
                     )
                 );
@@ -70,7 +75,7 @@ namespace ISM {
         }
     }
 
-    PosePtr Recognizer::calculatePoseFromVote(PosePtr pose, VoteSpecifierPtr vote) {
+    PosePtr Recognizer::calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const {
         PointPtr referencePoint = MathHelper::applyQuatAndRadiusToPose(pose, vote->objectToRefQuat, vote->radius);
         return MathHelper::getReferencePose(pose, referencePoint, vote->refToObjectQuat);
     }

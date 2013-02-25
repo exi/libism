@@ -112,6 +112,16 @@ namespace ISM {
         return id == 0 ? this->insertRecordedPattern(patternName) : id;
     }
 
+    std::vector<std::string> TableHelper::getRecordedPatternNames() const {
+        std::vector<std::string> names;
+        rowset<std::string> rs = ((*sqlite).prepare<< "SELECT name FROM `recorded_patterns`;");
+        for (auto& name : rs) {
+            names.push_back(name);;
+        }
+
+        return names;
+    }
+
     int TableHelper::getRecordedPatternId(const std::string& patternName) const {
         int id;
         indicator ind;

@@ -13,18 +13,21 @@ namespace ISM {
         ObjectSetPtr recognizedSet;
         double confidence;
         std::vector<PointPtr> idealPoints;
+        std::vector<PointPtr> votedPoints;
         RecognitionResult(
                 const std::string patternName,
                 const PosePtr referencePose,
                 const ObjectSetPtr recognizedSet,
                 const double confidence,
-                const std::vector<PointPtr> idealPoints
+                const std::vector<PointPtr> idealPoints,
+                const std::vector<PointPtr> votedPoints
                 ) :
             patternName(patternName),
             referencePose(referencePose),
             recognizedSet(recognizedSet),
             confidence(confidence),
-            idealPoints(idealPoints) {};
+            idealPoints(idealPoints),
+            votedPoints(votedPoints) {};
     };
 
     typedef boost::shared_ptr<RecognitionResult> RecognitionResultPtr;

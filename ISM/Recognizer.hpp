@@ -28,6 +28,6 @@ namespace ISM {
         private:
             void calculateVotes();
             void getPatternDefinitions();
-            PosePtr calculatePoseFromVote(PosePtr pose, VoteSpecifierPtr vote);
+            PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
     };
 }

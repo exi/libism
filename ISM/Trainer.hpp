@@ -15,6 +15,7 @@ namespace ISM {
         public:
             Trainer(std::string dbfilename = "record.sqlite");
 
+            void trainPattern();
             void trainPattern(std::string patternName);
 
         private:

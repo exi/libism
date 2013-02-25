@@ -37,6 +37,7 @@ namespace ISM {
 
             int getRecordedPatternId(const std::string& patternName) const;
             int ensureRecordedPatternName(const std::string& patternName) const;
+            std::vector<std::string> getRecordedPatternNames() const;
 
             const RecordedPatternPtr getRecordedPattern(const std::string& patternName) const;
             const ObjectSetPtr getRecordedObjectSet(int setId) const;
