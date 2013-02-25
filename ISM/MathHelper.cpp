@@ -6,29 +6,47 @@ typedef Eigen::Quaternion<double> EQuat;
 typedef Eigen::Vector3d Vector;
 namespace ISM {
     VoteSpecifierPtr MathHelper::getVoteSpecifierToPoint(const PosePtr& pose, const PointPtr& refPoint) {
-        Vector objectPose = getPoseVectorFromQuat(pose->quat);
-        Vector objectToPoint = pointToVector(refPoint) - pointToVector(pose->point);
-        EQuat otp = vectorRotationToEigenQuat(objectPose, objectToPoint);
-        EQuat pto = vectorRotationToEigenQuat(getViewportVector(), objectToPoint * -1.0);
+        //rotate everything relative to object pose
+        Vector refVector = pointToVector(refPoint) - pointToVector(pose->point);
+        EQuat p = quatToEigenQuat(pose->quat);
+        Vector relativeRefPoint = p.inverse()._transformVector(refVector);
+        Vector relativeRefPose = p.inverse()._transformVector(getViewportVector());
+
+        EQuat otp = vectorRotationToEigenQuat(getViewportVector(), relativeRefPoint);
+        EQuat pto = vectorRotationToEigenQuat(getViewportVector(), relativeRefPose);
+
         return VoteSpecifierPtr(
             new VoteSpecifier(
                 eigenQuatToQuat(otp),
                 eigenQuatToQuat(pto),
-                objectToPoint.norm()
+                relativeRefPoint.norm()
             )
         );
     }
 
     PosePtr MathHelper::getReferencePose(const PosePtr& origin, const PointPtr& refPoint, const QuaternionPtr& refToOriginQuat) {
-        Vector pointToOrigin = pointToVector(origin->point) - pointToVector(refPoint);
-        EQuat rotation = quatToEigenQuat(refToOriginQuat).inverse();
-        Vector refPointPoseVector = rotation._transformVector(pointToOrigin);
+        //rotate everything so that origin is matching viewport axis, apply rotation to refPoint view, rotate back
+        Vector refPoseObjRel = quatToEigenQuat(refToOriginQuat)._transformVector(getViewportVector());
+        Vector refPoseGlobal = quatToEigenQuat(origin->quat)._transformVector(refPoseObjRel);
         return PosePtr(
             new Pose(
                 refPoint,
-                eigenQuatToQuat(vectorRotationToEigenQuat(getViewportVector(), refPointPoseVector))
+                eigenQuatToQuat(vectorRotationToEigenQuat(getViewportVector(), refPoseGlobal))
             )
         );
+    }
+
+    PointPtr MathHelper::getOriginPoint(const PosePtr& refPose, const QuaternionPtr& objectToRefQuat, const QuaternionPtr& refToObjectQuat, double radius) {
+        Vector toOrigin = applyQuatAndRadiusToPoseV(
+            PosePtr(new Pose(
+                    PointPtr(new Point()),
+                    eigenQuatToQuat(((quatToEigenQuat(refPose->quat).inverse()) * (quatToEigenQuat(refToObjectQuat).inverse())).normalized())
+            )),
+            objectToRefQuat,
+            radius
+        );
+        std::cout<<"to origin: "<<vectorToPoint(toOrigin)<<std::endl;
+        return vectorToPoint(pointToVector(refPose->point) - toOrigin);
     }
 
     PointPtr MathHelper::applyQuatAndRadiusToPose(const PosePtr& pose, const QuaternionPtr& quat, double radius) {
@@ -36,11 +54,13 @@ namespace ISM {
     }
 
     Vector MathHelper::applyQuatAndRadiusToPoseV(const PosePtr& pose, const QuaternionPtr& quat, double radius) {
-        Vector objectPose = getPoseVectorFromQuat(pose->quat) * radius;
-        Vector objectPoint = pointToVector(pose->point);
+        //apply transformation to viewport vector, then scale, than transform to object coordinates and add
         EQuat rotation = quatToEigenQuat(quat);
-        Vector projectionVector = rotation._transformVector(objectPose);
-        return objectPoint + projectionVector;
+        Vector projectionVector = rotation._transformVector(getViewportVector()) * radius;
+        Vector projectionInGlobalSpace = quatToEigenQuat(pose->quat)._transformVector(projectionVector);
+
+        Vector objectPoint = pointToVector(pose->point);
+        return objectPoint + projectionInGlobalSpace;
     }
 
     Vector MathHelper::getPoseVectorFromQuat(const QuaternionPtr& quat) {

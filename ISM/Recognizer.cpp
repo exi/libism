@@ -49,6 +49,7 @@ namespace ISM {
                         votesMap[pattern] = std::vector<VotedPosePtr>();
                     }
 
+                    std::cout<<"voted pose:"<<std::endl<<pose<<std::endl;
                     VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
                     votesMap[pattern].push_back(v);
                     votedPoints.push_back(pose->point);

@@ -49,6 +49,14 @@ namespace ISM {
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
                 std::cout<<o<<std::endl;
+                auto rpoint = MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
+                auto rpose = MathHelper::getReferencePose(o->pose, rpoint, vote->refToObjectQuat);
+                std::cout<<"rpose:"<<rpose<<std::endl;
+                std::cout<<"toRefPoint:"<<MathHelper::applyQuatAndRadiusToPose(
+                        PosePtr(new Pose(PointPtr(new Point()), o->pose->quat)), vote->objectToRefQuat, vote->radius)<<std::endl;
+                auto bpoint = MathHelper::getOriginPoint(rpose, vote->objectToRefQuat, vote->refToObjectQuat, vote->radius);
+                std::cout<<"bpoint:"<<bpoint<<std::endl;
+                std::cout<<"distance:"<<MathHelper::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
                 this->tableHelper->insertModelVoteSpecifier(vote);
             }
         }
