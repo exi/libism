@@ -1,15 +1,18 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+#include "Serializable.hpp"
 
 namespace ISM {
-    class Point {
+    class Point : public Serializable {
         public:
             Point(): x(0), y(0), z(0) { }
             Point(double x, double y, double z) : x(x), y(y), z(z) {};
             double x;
             double y;
             double z;
+
+            virtual void serialize(std::ostream& strm) const;
     };
     typedef boost::shared_ptr<Point> PointPtr;
 
