@@ -138,10 +138,10 @@ class ExampleRenderer:
                 ocounter = ocounter + 1
 
             idx = self.addPoint(p, otypes[o['type']], label=o['type'])
-            self.addArrow(p, pv)
             for v in i['votes']:
-                id = self.addPoint(v, ocounter + 20)
-                connections.append((idx, id))
+                #id = self.addPoint(v, ocounter + 20)
+                #connections.append((idx, id))
+                self.addArrow(p, pv)
 
 
         nodes = points3d(
