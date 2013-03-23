@@ -12,6 +12,8 @@ namespace ISM {
         TableHelperPtr tableHelper;
         ObjectSetPtr inputSet;
         double sensitivity;
+        bool genericMode;
+        std::set<std::string> objectTypes;
 
         ObjectTypeToVoteMap objectDefinitions;
         PatternNameToPatternMap patternDefinitions;

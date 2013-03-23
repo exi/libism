@@ -56,6 +56,7 @@ namespace ISM {
 
             const PatternNameToPatternMap getPatternDefinitionsByName(const std::set<std::string>& patternNames) const;
 
+            const std::set<std::string> getObjectTypes() const;
             const ObjectTypeToVoteMap getVoteSpecifiersForObjectTypes(const std::set<std::string>& objectTypes) const;
     };
 

@@ -307,6 +307,15 @@ namespace ISM {
         return patterns;
     }
 
+    const std::set<std::string> TableHelper::getObjectTypes() const {
+        rowset<row> rs = ((*sqlite).prepare<<"SELECT type FROM `model_objects`;");
+        std::set<std::string> types;
+        BOOST_FOREACH(row const& row, rs) {
+            types.insert(row.get<std::string>(0));
+        }
+        return types;
+    }
+
     const ObjectTypeToVoteMap TableHelper::getVoteSpecifiersForObjectTypes(const std::set<std::string>& objectTypes) const {
         ObjectTypeToVoteMap voteSpecifierMap;
         BOOST_FOREACH(std::string objectType, objectTypes) {

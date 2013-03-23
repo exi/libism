@@ -20,13 +20,13 @@ namespace ISM {
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
         this->results.clear();
+        this->objectTypes.clear();
         this->inputSet = objectSet;
-        std::set<std::string> objectTypes;
-        BOOST_FOREACH(ObjectPtr o, objectSet->objects) {
-            objectTypes.insert(o->type);
-        }
+        this->genericMode = genericMode;
 
-        this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(objectTypes);
+        this->objectTypes = this->tableHelper->getObjectTypes();
+
+        this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
         this->getPatternDefinitions();
 
         this->calculateVotes();
@@ -39,23 +39,32 @@ namespace ISM {
 
         std::map<ObjectPtr, std::vector<PointPtr>> votedPoints;
         for (ObjectPtr& object : this->inputSet->objects) {
-            std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[object->type];
-            for (VoteSpecifierPtr& vote : votes) {
-                if (object->observedId == "" || object->observedId == vote->observedId) {
-                    PatternPtr pattern = this->patternDefinitions[vote->patternName];
-                    PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
+            std::set<std::string> types;
+            if (object->type == "") {
+                types = this->objectTypes;
+            } else {
+                types.insert(object->type);
+            }
 
-                    if (votesMap.find(pattern) == votesMap.end()) {
-                        votesMap[pattern] = std::vector<VotedPosePtr>();
+            for (auto& objectType : types) {
+                std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[objectType];
+                for (VoteSpecifierPtr& vote : votes) {
+                    if (object->observedId == "" || object->observedId == vote->observedId) {
+                        PatternPtr pattern = this->patternDefinitions[vote->patternName];
+                        PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
+
+                        if (votesMap.find(pattern) == votesMap.end()) {
+                            votesMap[pattern] = std::vector<VotedPosePtr>();
+                        }
+
+                        VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
+                        votesMap[pattern].push_back(v);
+
+                        if (votedPoints.find(object) == votedPoints.end()) {
+                            votedPoints[object] = std::vector<PointPtr>();
+                        }
+                        votedPoints[object].push_back(pose->point);
                     }
-
-                    VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
-                    votesMap[pattern].push_back(v);
-
-                    if (votedPoints.find(object) == votedPoints.end()) {
-                        votedPoints[object] = std::vector<PointPtr>();
-                    }
-                    votedPoints[object].push_back(pose->point);
                 }
             }
         }

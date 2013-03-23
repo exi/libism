@@ -39,21 +39,14 @@ namespace ISM {
 
     void Trainer::learn(bool generateJson) {
         this->json<<"{";
-        PointPtr referencePoint = this->recordedPattern->getAbsoluteReferencePoint();
-        if (!generateJson) {
-            std::cout<<"Reference Point: "<<referencePoint<<std::endl;
-        } else {
-            this->json<<"\"name\": \""<<this->recordedPattern->name<<"\", "
-                <<"\"referencePoint\": "<<ISM::json(referencePoint)<<", "<<std::endl<<"\"objects\": [";
-        }
-
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
         int objectCount = 0;
         bool first = true;
-        BOOST_FOREACH(ObjectSetPtr os, sets) {
+        for (ObjectSetPtr& os : sets) {
+            PointPtr referencePoint = os->getReferencePoint();
             std::vector<ObjectPtr> objects = os->objects;
             objectCount += objects.size();
-            BOOST_FOREACH(ObjectPtr o, objects) {
+            for (ObjectPtr& o : objects) {
                 VoteSpecifierPtr vote = MathHelper::getVoteSpecifierToPoint(o->pose, referencePoint);
                 vote->patternName = this->recordedPattern->name;
                 vote->observedId = o->observedId;
@@ -91,6 +84,8 @@ namespace ISM {
     std::string Trainer::getJsonRepresentation(const std::string& patternName) {
         boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
         if (r) {
+            this->json.str("");
+            this->json.clear();
             this->recordedPattern = r;
             this->learn(true);
             return this->json.str();

@@ -5,9 +5,9 @@
 
 namespace ISM {
     void VotingBin::insert(const VotedPosePtr& vote) {
-        auto typeIt = votes.find(vote->source->type);
+        auto typeIt = votes.find(vote->vote->objectType);
         if (typeIt == votes.end()) {
-            typeIt = votes.insert(std::make_pair(vote->source->type, IdToVoteMap())).first;
+            typeIt = votes.insert(std::make_pair(vote->vote->objectType, IdToVoteMap())).first;
         }
 
         auto idIt = typeIt->second.find(vote->vote->observedId);
@@ -57,6 +57,7 @@ namespace ISM {
                 confidence += p->confidence;
                 ObjectPtr o(new Object(*(p->source)));
                 o->observedId = p->vote->observedId;
+                o->type = p->vote->objectType;
                 os->insert(o);
             }
 
