@@ -8,7 +8,9 @@
 namespace ISM {
     struct VoteSpecifier {
         QuaternionPtr objectToRefQuat;
+        QuaternionPtr objectToRefPoseQuat;
         QuaternionPtr refToObjectQuat;
+        QuaternionPtr refToObjectPoseQuat;
         double radius;
         std::string patternName;
         std::string objectType;
@@ -18,19 +20,25 @@ namespace ISM {
                                                     objectType(other.objectType),
                                                     observedId(other.observedId) {
             objectToRefQuat = QuaternionPtr(new Quaternion(*(other.objectToRefQuat)));
+            objectToRefPoseQuat = QuaternionPtr(new Quaternion(*(other.objectToRefPoseQuat)));
             refToObjectQuat = QuaternionPtr(new Quaternion(*(other.refToObjectQuat)));
+            refToObjectPoseQuat = QuaternionPtr(new Quaternion(*(other.refToObjectPoseQuat)));
         }
         VoteSpecifier(QuaternionPtr objectToRefQuat, QuaternionPtr refToObjectQuat, double radius):
             objectToRefQuat(objectToRefQuat), refToObjectQuat(refToObjectQuat), radius(radius) {};
         VoteSpecifier(
                 QuaternionPtr objectToRefQuat,
+                QuaternionPtr objectToRefPoseQuat,
                 QuaternionPtr refToObjectQuat,
+                QuaternionPtr refToObjectPoseQuat,
                 double radius,
                 std::string patternName,
                 std::string objectType,
                 std::string observedId):
             objectToRefQuat(objectToRefQuat),
+            objectToRefPoseQuat(objectToRefPoseQuat),
             refToObjectQuat(refToObjectQuat),
+            refToObjectPoseQuat(refToObjectPoseQuat),
             radius(radius),
             patternName(patternName),
             objectType(objectType),
