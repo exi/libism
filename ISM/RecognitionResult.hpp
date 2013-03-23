@@ -2,6 +2,8 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
+#include <map>
 #include <boost/shared_ptr.hpp>
 #include "ObjectSet.hpp"
 #include "Pose.hpp"
@@ -13,14 +15,14 @@ namespace ISM {
         ObjectSetPtr recognizedSet;
         double confidence;
         std::vector<PointPtr> idealPoints;
-        std::vector<PointPtr> votedPoints;
+        std::map<ObjectPtr, std::vector<PointPtr>> votedPoints;
         RecognitionResult(
                 const std::string patternName,
                 const PosePtr referencePose,
                 const ObjectSetPtr recognizedSet,
                 const double confidence,
                 const std::vector<PointPtr> idealPoints,
-                const std::vector<PointPtr> votedPoints
+                const std::map<ObjectPtr, std::vector<PointPtr>> votedPoints
                 ) :
             patternName(patternName),
             referencePose(referencePose),

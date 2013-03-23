@@ -37,7 +37,7 @@ namespace ISM {
         //vote for each pattern separately
         std::map<PatternPtr, std::vector<VotedPosePtr> > votesMap;
 
-        std::vector<PointPtr> votedPoints;
+        std::map<ObjectPtr, std::vector<PointPtr>> votedPoints;
         for (ObjectPtr& object : this->inputSet->objects) {
             std::vector<VoteSpecifierPtr> votes = this->objectDefinitions[object->type];
             for (VoteSpecifierPtr& vote : votes) {
@@ -52,7 +52,11 @@ namespace ISM {
                     std::cout<<"voted pose:"<<std::endl<<pose<<std::endl;
                     VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
                     votesMap[pattern].push_back(v);
-                    votedPoints.push_back(pose->point);
+
+                    if (votedPoints.find(object) == votedPoints.end()) {
+                        votedPoints[object] = std::vector<PointPtr>();
+                    }
+                    votedPoints[object].push_back(pose->point);
                 }
             }
         }

@@ -5,9 +5,10 @@
 #include <ostream>
 #include "Quaternion.hpp"
 #include "Point.hpp"
+#include "Serializable.hpp"
 
 namespace ISM {
-    class Pose {
+    class Pose : public Serializable {
         public:
             PointPtr point;
             QuaternionPtr quat;
@@ -28,6 +29,8 @@ namespace ISM {
             };
 
             Pose(PointPtr p, QuaternionPtr quat): point(p), quat(quat) {};
+
+            virtual void serialize(std::ostream& strm) const;
     };
     typedef boost::shared_ptr<Pose> PosePtr;
 

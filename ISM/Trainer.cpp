@@ -9,6 +9,7 @@
 #include "MathHelper.hpp"
 #include "VoteSpecifier.hpp"
 #include "Pose.hpp"
+#include "JsonStream.hpp"
 
 namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
@@ -23,23 +24,30 @@ namespace ISM {
         }
     }
 
-    void Trainer::trainPattern(std::string patternName) {
+    void Trainer::trainPattern(const std::string& patternName) {
         boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
         if (!r) {
             std::cout<<"no pattern records found."<<std::endl;
         } else {
             std::cout<<"pattern records found."<<std::endl;
             this->recordedPattern = r;
-            this->learn();
+            this->learn(false);
         }
     }
 
-    void Trainer::learn() {
+    void Trainer::learn(bool generateJson) {
+        this->json<<"{";
         PointPtr referencePoint = this->recordedPattern->getAbsoluteReferencePoint();
-        std::cout<<"Reference Point: "<<referencePoint<<std::endl;
+        if (!generateJson) {
+            std::cout<<"Reference Point: "<<referencePoint<<std::endl;
+        } else {
+            this->json<<"\"name\": \""<<this->recordedPattern->name<<"\", "
+                <<"\"referencePoint\": "<<ISM::json(referencePoint)<<", "<<std::endl<<"\"objects\": [";
+        }
 
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
         int objectCount = 0;
+        bool first = true;
         BOOST_FOREACH(ObjectSetPtr os, sets) {
             std::vector<ObjectPtr> objects = os->objects;
             objectCount += objects.size();
@@ -48,23 +56,40 @@ namespace ISM {
                 vote->patternName = this->recordedPattern->name;
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
-                std::cout<<o<<std::endl;
-                auto rpoint = MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
-                auto rpose = MathHelper::getReferencePose(o->pose, rpoint, vote->refToObjectQuat);
-                std::cout<<"rpose:"<<rpose<<std::endl;
-                std::cout<<"toRefPoint:"<<MathHelper::applyQuatAndRadiusToPose(
-                        PosePtr(new Pose(PointPtr(new Point()), o->pose->quat)), vote->objectToRefQuat, vote->radius)<<std::endl;
-                auto bpoint = MathHelper::getOriginPoint(rpose, vote->objectToRefQuat, vote->refToObjectQuat, vote->radius);
-                std::cout<<"bpoint:"<<bpoint<<std::endl;
-                std::cout<<"distance:"<<MathHelper::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
-                this->tableHelper->insertModelVoteSpecifier(vote);
+                if (!generateJson) {
+                    std::cout<<o<<std::endl;
+                    this->tableHelper->insertModelVoteSpecifier(vote);
+                } else {
+                    if (first) {
+                        first = false;
+                    } else {
+                        this->json<<", "<<std::endl;
+                    }
+                    this->json<<ISM::json(o);
+                }
             }
         }
 
-        this->tableHelper->upsertModelPattern(
-            this->recordedPattern->name,
-            objectCount / sets.size(),
-            this->recordedPattern->minMaxFinder->getMaxSpread()
-        ) ;
+        if (!generateJson) {
+            this->tableHelper->upsertModelPattern(
+                this->recordedPattern->name,
+                objectCount / sets.size(),
+                this->recordedPattern->minMaxFinder->getMaxSpread()
+            );
+        } else {
+            this->json<<"]"<<std::endl;
+            this->json<<"}";
+        }
+    }
+
+    std::string Trainer::getJsonRepresentation(const std::string& patternName) {
+        boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
+        if (r) {
+            this->recordedPattern = r;
+            this->learn(true);
+            return this->json.str();
+        } else {
+            return "";
+        }
     }
 }
