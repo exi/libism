@@ -49,7 +49,6 @@ namespace ISM {
                         votesMap[pattern] = std::vector<VotedPosePtr>();
                     }
 
-                    std::cout<<"voted pose:"<<std::endl<<pose<<std::endl;
                     VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
                     votesMap[pattern].push_back(v);
 
@@ -82,7 +81,7 @@ namespace ISM {
 
     PosePtr Recognizer::calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const {
         PointPtr referencePoint = MathHelper::applyQuatAndRadiusToPose(pose, vote->objectToRefQuat, vote->radius);
-        return MathHelper::getReferencePose(pose, referencePoint, vote->refToObjectQuat);
+        return MathHelper::getReferencePose(pose, referencePoint, vote->objectToRefPoseQuat);
     }
 
     void Recognizer::getPatternDefinitions() {

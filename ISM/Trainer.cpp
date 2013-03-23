@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <math.h>
 
 #include "Trainer.hpp"
 #include "RecordedPattern.hpp"
@@ -18,6 +19,7 @@ namespace ISM {
 
     void Trainer::trainPattern() {
         std::vector<std::string> patternNames = this->tableHelper->getRecordedPatternNames();
+        std::cout<<"found "<<patternNames.size()<<" patterns"<<std::endl;
         for (auto& name : patternNames) {
             std::cout<<"training "<<name<<std::endl;
             this->trainPattern(name);
@@ -58,6 +60,10 @@ namespace ISM {
                 vote->objectType = o->type;
                 if (!generateJson) {
                     std::cout<<o<<std::endl;
+                    auto rpoint = MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
+                    auto rpose = MathHelper::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
+                    auto bpoint = MathHelper::getOriginPoint(rpose, vote->refToObjectQuat, vote->radius);
+                    std::cout<<"error:"<<MathHelper::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
                     this->tableHelper->insertModelVoteSpecifier(vote);
                 } else {
                     if (first) {
@@ -73,7 +79,7 @@ namespace ISM {
         if (!generateJson) {
             this->tableHelper->upsertModelPattern(
                 this->recordedPattern->name,
-                objectCount / sets.size(),
+                floor(((float)objectCount / (float)sets.size()) + 0.5),
                 this->recordedPattern->minMaxFinder->getMaxSpread()
             );
         } else {

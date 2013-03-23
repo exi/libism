@@ -26,7 +26,6 @@ namespace ISM {
         rowset<row> rs = (*sqlite).prepare<< "SELECT tbl_name FROM sqlite_master WHERE type = 'table';";
         for (rowset<row>::const_iterator it = rs.begin(); it != rs.end(); ++it) {
             row const& row = *it;
-            std::cout<<"found table "<<row.get<std::string>(0)<<std::endl;
             tables.insert(row.get<std::string>(0));
         }
 
@@ -35,7 +34,12 @@ namespace ISM {
         tableDefs["recorded_sets"] = "id INTEGER PRIMARY KEY, patternId INTEGER";
         tableDefs["recorded_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE";
         tableDefs["model_objects"] = "id INTEGER PRIMARY KEY, type TEXT UNIQUE";
-        tableDefs["model_votes"] = "id INTEGER PRIMARY KEY, objectId INTEGER, patternId INTEGER, observedId TEXT, radius FLOAT, qw FLOAT, qx FLOAT, qy FLOAT, qz FLOAT, qw2 FLOAT, qx2 FLOAT, qy2 FLOAT, qz2 FLOAT";
+        tableDefs["model_votes"] =
+            "id INTEGER PRIMARY KEY, objectId INTEGER, patternId INTEGER, observedId TEXT, radius FLOAT"
+            ", qw FLOAT, qx FLOAT, qy FLOAT, qz FLOAT"
+            ", qw2 FLOAT, qx2 FLOAT, qy2 FLOAT, qz2 FLOAT"
+            ", qpw FLOAT, qpx FLOAT, qpy FLOAT, qpz FLOAT"
+            ", qpw2 FLOAT, qpx2 FLOAT, qpy2 FLOAT, qpz2 FLOAT";
         tableDefs["model_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE, expectedObjectCount INTEGER, referencePointSpread FLOAT";
 
         typedef std::pair<std::string, std::string> pair_type;
@@ -47,7 +51,6 @@ namespace ISM {
     }
 
     void TableHelper::createTable(const std::string& tablename, const std::string& sql) const {
-        std::cout<<"creating "<<tablename<<" table"<<std::endl;
         try {
             (*sqlite).once<<"CREATE TABLE `"<<tablename<<"` ("<<sql<<");";
         } catch (soci_error e) {
@@ -91,6 +94,7 @@ namespace ISM {
     int TableHelper::insertRecordedObjectSet(const ObjectSetPtr& os, const std::string& patternName) const {
         std::vector<boost::shared_ptr<Object> > objects = os->objects;
 
+        transaction trans(*sqlite);
         int patternId = this->ensureRecordedPatternName(patternName);
 
         (*sqlite) << "INSERT INTO `recorded_sets` (patternId) VALUES (:patternId);", use(patternId);
@@ -98,6 +102,8 @@ namespace ISM {
         for (size_t i = 0; i < objects.size(); i++) {
             this->insertRecordedObject(objects[i], setId);
         }
+
+        trans.commit();
 
         return setId;
     }
@@ -142,7 +148,6 @@ namespace ISM {
 
             rowset<int> rs = ((*sqlite).prepare<< "SELECT id FROM `recorded_sets` WHERE patternId = :patternId;", use(patternId));
             for (rowset<int>::const_iterator it = rs.begin(); it != rs.end(); ++it) {
-                std::cout<<"found set id: "<<*it<<std::endl;
                 pattern->addObjectSet(this->getRecordedObjectSet(*it));
             }
         }
@@ -195,8 +200,8 @@ namespace ISM {
         int objectId = this->ensureModelObjectType(vote->objectType);
 
         (*sqlite) << "INSERT INTO `model_votes` "<<
-            "(objectId, patternId, observedId, radius, qw, qx, qy, qz, qw2, qx2, qy2, qz2) values "<<
-            "(:objectId, :patternId, :observedId, :radius, :qw, :qx, :qy, :qz, :qw2, :qx2, :qy2, :qz2);",
+            "(objectId, patternId, observedId, radius, qw, qx, qy, qz, qw2, qx2, qy2, qz2, qpw, qpx, qpy, qpz, qpw2, qpx2, qpy2, qpz2) values "<<
+            "(:objectId, :patternId, :observedId, :radius, :qw, :qx, :qy, :qz, :qw2, :qx2, :qy2, :qz2, :qpw, :qpx, :qpy, :qpz, :qpw2, :qpx2, :qpy2, :qpz2);",
             use(objectId),
             use(patternId),
             use(vote->observedId),
@@ -205,10 +210,18 @@ namespace ISM {
             use(vote->objectToRefQuat->x),
             use(vote->objectToRefQuat->y),
             use(vote->objectToRefQuat->z),
+            use(vote->objectToRefPoseQuat->w),
+            use(vote->objectToRefPoseQuat->x),
+            use(vote->objectToRefPoseQuat->y),
+            use(vote->objectToRefPoseQuat->z),
             use(vote->refToObjectQuat->w),
             use(vote->refToObjectQuat->x),
             use(vote->refToObjectQuat->y),
-            use(vote->refToObjectQuat->z);
+            use(vote->refToObjectQuat->z),
+            use(vote->refToObjectPoseQuat->w),
+            use(vote->refToObjectPoseQuat->x),
+            use(vote->refToObjectPoseQuat->y),
+            use(vote->refToObjectPoseQuat->z);
 
         return this->getLastInsertId("model_votes");
     }
@@ -299,7 +312,7 @@ namespace ISM {
         BOOST_FOREACH(std::string objectType, objectTypes) {
             int objectId = getModelObjectTypeId(objectType);
             rowset<row> rs = ((*sqlite).prepare<<
-                "SELECT radius, name, type, observedId, qw, qx, qy, qz, qw2, qx2, qy2, qz2 "<<
+                "SELECT radius, name, type, observedId, qw, qx, qy, qz, qw2, qx2, qy2, qz2, qpw, qpx, qpy, qpz, qpw2, qpx2, qpy2, qpz2 "<<
                 "FROM `model_votes` AS v "<<
                 "JOIN `model_objects` AS o ON v.objectId = o.id "<<
                 "JOIN `model_patterns` AS p ON v.patternId = p.id "<<
@@ -324,6 +337,22 @@ namespace ISM {
                                 row.get<double>(9, 0.0),
                                 row.get<double>(10, 0.0),
                                 row.get<double>(11, 0.0)
+                            )
+                        ),
+                        QuaternionPtr(
+                            new Quaternion(
+                                row.get<double>(12, 0.0),
+                                row.get<double>(13, 0.0),
+                                row.get<double>(14, 0.0),
+                                row.get<double>(15, 0.0)
+                            )
+                        ),
+                        QuaternionPtr(
+                            new Quaternion(
+                                row.get<double>(16, 0.0),
+                                row.get<double>(17, 0.0),
+                                row.get<double>(18, 0.0),
+                                row.get<double>(19, 0.0)
                             )
                         ),
                         row.get<double>(0, 0.0),

@@ -3,7 +3,7 @@
 
 using namespace ISM;
 int main (int argc, char** argv) {
-    if (argc <= 2) {
+    if (argc < 2) {
         Trainer t;
         std::cout<<"training all patterns"<<std::endl;
         t.trainPattern();

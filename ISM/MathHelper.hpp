@@ -10,7 +10,7 @@ namespace ISM {
         public:
             static VoteSpecifierPtr getVoteSpecifierToPoint(const PosePtr& pose, const PointPtr& refPoint);
             static PosePtr getReferencePose(const PosePtr& origin, const PointPtr& refPoint, const QuaternionPtr& refToOriginQuat);
-            static PointPtr getOriginPoint(const PosePtr& refPose, const QuaternionPtr& objectToRefQuat, const QuaternionPtr& refToObjectQuat, double radius);
+            static PointPtr getOriginPoint(const PosePtr& refPose, const QuaternionPtr& refToObjectQuat, double radius);
             static PointPtr applyQuatAndRadiusToPose(const PosePtr& pose, const QuaternionPtr& quat, double radius);
             static Eigen::Vector3d applyQuatAndRadiusToPoseV(const PosePtr& pose, const QuaternionPtr& quat, double radius);
             static Eigen::Vector3d getViewportVector();

@@ -39,11 +39,9 @@ namespace ISM {
                     idealPoints.clear();
                     PointPtr projectedPoint = MathHelper::getOriginPoint(
                         fittingPose,
-                        (*voteIt)->vote->objectToRefQuat,
                         (*voteIt)->vote->refToObjectQuat,
                         (*voteIt)->vote->radius
                     );
-                    std::cout<<"projection"<<std::endl<<projectedPoint<<std::endl;
                     idealPoints.push_back(projectedPoint);
                     finished = searchFit(sensitivity);
                 }
@@ -93,11 +91,9 @@ namespace ISM {
 
                     PointPtr projectedPoint = MathHelper::getOriginPoint(
                         fittingPose,
-                        vote->vote->objectToRefQuat,
                         vote->vote->refToObjectQuat,
                         vote->vote->radius
                     );
-                    std::cout<<"projection"<<std::endl<<projectedPoint<<std::endl;
 
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     if (distance <= sensitivity) {

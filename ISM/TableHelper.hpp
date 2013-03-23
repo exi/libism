@@ -21,7 +21,7 @@ namespace ISM {
         boost::shared_ptr<session> sqlite;
         public:
             /* util */
-            TableHelper(std::string dbfilename);
+            TableHelper(std::string dbfilename = "record.sqlite");
 
             ~TableHelper();
 
@@ -34,6 +34,7 @@ namespace ISM {
             int insertRecordedObject(const boost::shared_ptr<Object>& o, int setId) const;
             int insertRecordedObjectSet(const boost::shared_ptr<ObjectSet>& os, const std::string& patternName) const;
             int insertRecordedPattern(const std::string& patternName) const;
+            int insertRecordedPattern(const RecordedPatternPtr& pattern) const;
 
             int getRecordedPatternId(const std::string& patternName) const;
             int ensureRecordedPatternName(const std::string& patternName) const;

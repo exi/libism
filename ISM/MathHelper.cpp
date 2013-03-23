@@ -12,14 +12,20 @@ namespace ISM {
         Vector relativeRefPoint = p.inverse()._transformVector(refVector);
         Vector relativeRefPose = p.inverse()._transformVector(getViewportVector());
 
-        EQuat otp = vectorRotationToEigenQuat(getViewportVector(), relativeRefPoint);
-        EQuat pto = vectorRotationToEigenQuat(getViewportVector(), relativeRefPose);
+        EQuat otr = vectorRotationToEigenQuat(getViewportVector(), relativeRefPoint);
+        EQuat otrp = vectorRotationToEigenQuat(getViewportVector(), relativeRefPose);
+
+        //rotate everything relative to ref pose
+        EQuat rto = vectorRotationToEigenQuat(getViewportVector(), refVector * -1.0);
+        EQuat rtop = p;
 
         return VoteSpecifierPtr(
             new VoteSpecifier(
-                eigenQuatToQuat(otp),
-                eigenQuatToQuat(pto),
-                relativeRefPoint.norm()
+                eigenQuatToQuat(otr),
+                eigenQuatToQuat(otrp),
+                eigenQuatToQuat(rto),
+                eigenQuatToQuat(rtop),
+                refVector.norm()
             )
         );
     }
@@ -36,17 +42,10 @@ namespace ISM {
         );
     }
 
-    PointPtr MathHelper::getOriginPoint(const PosePtr& refPose, const QuaternionPtr& objectToRefQuat, const QuaternionPtr& refToObjectQuat, double radius) {
-        Vector toOrigin = applyQuatAndRadiusToPoseV(
-            PosePtr(new Pose(
-                    PointPtr(new Point()),
-                    eigenQuatToQuat(((quatToEigenQuat(refPose->quat).inverse()) * (quatToEigenQuat(refToObjectQuat).inverse())).normalized())
-            )),
-            objectToRefQuat,
-            radius
-        );
-        std::cout<<"to origin: "<<vectorToPoint(toOrigin)<<std::endl;
-        return vectorToPoint(pointToVector(refPose->point) - toOrigin);
+    PointPtr MathHelper::getOriginPoint(const PosePtr& refPose, const QuaternionPtr& refToObjectQuat, double radius) {
+        Vector relativeObjectVector = quatToEigenQuat(refToObjectQuat)._transformVector(getViewportVector());
+        Vector absoluteObjectVector = quatToEigenQuat(refPose->quat)._transformVector(relativeObjectVector);
+        return vectorToPoint(pointToVector(refPose->point) + (absoluteObjectVector * radius));
     }
 
     PointPtr MathHelper::applyQuatAndRadiusToPose(const PosePtr& pose, const QuaternionPtr& quat, double radius) {

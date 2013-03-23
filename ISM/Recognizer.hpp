@@ -30,4 +30,5 @@ namespace ISM {
             void getPatternDefinitions();
             PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
     };
+    typedef boost::shared_ptr<Recognizer> RecognizerPtr;
 }
