@@ -1,21 +1,38 @@
 #include <ISM/Trainer.hpp>
+#include <boost/program_options.hpp>
 #include <string>
 
 using namespace ISM;
+using namespace std;
+namespace po = boost::program_options;
+
 int main (int argc, char** argv) {
-    if (argc < 2) {
-        Trainer t;
-        std::cout<<"training all patterns"<<std::endl;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,h", "produce help message")
+        ("database-file,r", po::value<string>()->default_value("record.sqlite"), "database file to use")
+        ("pattern-name,p", po::value<vector<string> >(), "patters to train instead of all")
+    ;
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help")) {
+        cout << desc << "\n";
+        return 1;
+    }
+
+    string filename = vm["database-file"].as<string>();
+    Trainer t(filename);
+    std::string patternName(argv[2]);
+    if (vm.count("pattern-name")) {
+        auto names = vm["pattern-name"].as<vector<string> >();
+        for (auto& patternName : names) {
+            std::cout<<"training pattern "<<patternName<<" from file "<<filename<<std::endl;
+            t.trainPattern(patternName);
+        }
+    } else {
         t.trainPattern();
-    } else if (argc == 2) {
-        Trainer t;
-        std::string patternName(argv[1]);
-        std::cout<<"training pattern "<<patternName<<std::endl;
-        t.trainPattern(patternName);
-    } else if (argc == 3) {
-        Trainer t(argv[1]);
-        std::string patternName(argv[2]);
-        std::cout<<"training pattern "<<patternName<<" from file "<<argv[1]<<std::endl;
-        t.trainPattern(patternName);
     }
 }
