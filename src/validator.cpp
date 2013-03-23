@@ -18,12 +18,12 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
     int objectCount = 0;
     int identifySum = 0;
     double confidenceSum = 0;
-    for (auto& set : pattern->objectSets) {
+    for (auto& os : pattern->objectSets) {
 
-        std::set<std::pair<string, string> > mappedTypes;
+        set<pair<string, string> > mappedTypes;
 
         if (detectGeneric) {
-            for (auto& obj : set->objects) {
+            for (auto& obj : os->objects) {
                 mappedTypes.insert(make_pair(obj->type, obj->observedId));
                 objectCount++;
                 obj->type = "";
@@ -31,7 +31,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
             }
         }
 
-        auto results = recognizer->recognizePattern(set);
+        auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
             if (result->patternName == pattern->name) {
                 cout<<".";
