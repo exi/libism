@@ -21,7 +21,6 @@ namespace ISM {
         std::vector<std::string> patternNames = this->tableHelper->getRecordedPatternNames();
         std::cout<<"found "<<patternNames.size()<<" patterns"<<std::endl;
         for (auto& name : patternNames) {
-            std::cout<<"training "<<name<<std::endl;
             this->trainPattern(name);
         }
     }
@@ -29,9 +28,9 @@ namespace ISM {
     void Trainer::trainPattern(const std::string& patternName) {
         boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
         if (!r) {
-            std::cout<<"no pattern records found."<<std::endl;
+            std::cout<<"no pattern records found for pattern "<<patternName<<std::endl;
         } else {
-            std::cout<<"pattern records found."<<std::endl;
+            std::cout<<"training "<<patternName<<std::endl;
             this->recordedPattern = r;
             this->learn(false);
         }
@@ -52,11 +51,8 @@ namespace ISM {
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
                 if (!generateJson) {
-                    std::cout<<o<<std::endl;
-                    auto rpoint = MathHelper::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
-                    auto rpose = MathHelper::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
-                    auto bpoint = MathHelper::getOriginPoint(rpose, vote->refToObjectQuat, vote->radius);
-                    std::cout<<"error:"<<MathHelper::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
+                    std::cout<<".";
+                    std::cout.flush();
                     this->tableHelper->insertModelVoteSpecifier(vote);
                 } else {
                     if (first) {
@@ -70,6 +66,7 @@ namespace ISM {
         }
 
         if (!generateJson) {
+            std::cout<<"done"<<std::endl;
             this->tableHelper->upsertModelPattern(
                 this->recordedPattern->name,
                 floor(((float)objectCount / (float)sets.size()) + 0.5),
