@@ -8,7 +8,7 @@
 namespace ISM {
     class MathHelper {
         public:
-            static VoteSpecifierPtr getVoteSpecifierToPoint(const PosePtr& pose, const PointPtr& refPoint);
+            static VoteSpecifierPtr getVoteSpecifierToPose(const PosePtr& pose, const PosePtr& refPose);
             static PosePtr getReferencePose(const PosePtr& origin, const PointPtr& refPoint, const QuaternionPtr& refToOriginQuat);
             static PointPtr getOriginPoint(const PosePtr& refPose, const QuaternionPtr& refToObjectQuat, double radius);
             static PointPtr applyQuatAndRadiusToPose(const PosePtr& pose, const QuaternionPtr& quat, double radius);

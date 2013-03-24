@@ -63,13 +63,16 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
 }
 
 int main (int argc, char** argv) {
+    double sensitivity = 0.0001;
+
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
         ("database-file,r", po::value<string>()->default_value("record.sqlite"), "database file to use")
         ("generic-mode,g", po::bool_switch(&detectGeneric), "test object type inference by removing object type and id from recognition input")
+        ("sensitivity,s", po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")
         ("pattern-name,p", po::value<vector<string> >(), "patters to validate instead of all")
-        ;
+    ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -80,7 +83,6 @@ int main (int argc, char** argv) {
         return 1;
     }
 
-    double sensitivity = 0.0001;
     TableHelper t(vm["database-file"].as<string>());
     RecognizerPtr r(new Recognizer(vm["database-file"].as<string>(), sensitivity));
     if (vm.count("pattern-name")) {
