@@ -59,6 +59,21 @@ namespace ISM {
         }
     }
 
+    void TableHelper::dropTable(const std::string& tablename) const {
+        try {
+            (*sqlite).once<<"DROP TABLE `"<<tablename<<"`;";
+        } catch (soci_error e) {
+            std::cerr<<"SQL error "<<e.what()<<std::endl;
+            throw e;
+        }
+    }
+
+    void TableHelper::dropModelTables() const {
+        this->dropTable("model_votes");
+        this->dropTable("model_patterns");
+        this->dropTable("model_objects");
+    }
+
     int TableHelper::getLastInsertId(const std::string& tablename) const {
         int id = 0;
         try {

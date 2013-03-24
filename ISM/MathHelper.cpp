@@ -30,9 +30,9 @@ namespace ISM {
         );
     }
 
-    PosePtr MathHelper::getReferencePose(const PosePtr& origin, const PointPtr& refPoint, const QuaternionPtr& refToOriginQuat) {
+    PosePtr MathHelper::getReferencePose(const PosePtr& origin, const PointPtr& refPoint, const QuaternionPtr& objectToRefPoseQuat) {
         //rotate everything so that origin is matching viewport axis, apply rotation to refPoint view, rotate back
-        Vector refPoseObjRel = quatToEigenQuat(refToOriginQuat)._transformVector(getViewportVector());
+        Vector refPoseObjRel = quatToEigenQuat(objectToRefPoseQuat)._transformVector(getViewportVector());
         Vector refPoseGlobal = quatToEigenQuat(origin->quat)._transformVector(refPoseObjRel);
         return PosePtr(
             new Pose(

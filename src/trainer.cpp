@@ -12,6 +12,7 @@ int main (int argc, char** argv) {
         ("help,h", "produce help message")
         ("database-file,r", po::value<string>()->default_value("record.sqlite"), "database file to use")
         ("pattern-name,p", po::value<vector<string> >(), "patters to train instead of all")
+        ("skip-count,s", po::value<int>(), "skip number of training sets after every trained set")
     ;
 
     po::variables_map vm;
@@ -25,6 +26,9 @@ int main (int argc, char** argv) {
 
     string filename = vm["database-file"].as<string>();
     Trainer t(filename);
+    if (vm.count("skip-count")) {
+        t.setSkipsPerCycle(vm["skip-count"].as<int>());
+    }
     std::string patternName(argv[2]);
     if (vm.count("pattern-name")) {
         auto names = vm["pattern-name"].as<vector<string> >();

@@ -27,6 +27,9 @@ namespace ISM {
 
             void createTablesIfNecessary() const;
             void createTable(const std::string& tablename, const std::string& sql) const;
+            void dropTable(const std::string& tablename) const;
+
+            void dropModelTables() const;
 
             int getLastInsertId(const std::string& tablename) const;
 

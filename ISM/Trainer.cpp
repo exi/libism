@@ -15,6 +15,11 @@
 namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
         this->tableHelper.reset(new TableHelper(dbfilename));
+        this->skips = 0;
+    }
+
+    void Trainer::setSkipsPerCycle(int skips) {
+        this->skips = skips;
     }
 
     void Trainer::trainPattern() {
@@ -39,9 +44,22 @@ namespace ISM {
     void Trainer::learn(bool generateJson) {
         this->json<<"{";
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
+        int toSkip = 0;
+        int setCount = 0;
         int objectCount = 0;
         bool first = true;
         for (ObjectSetPtr& os : sets) {
+            if (toSkip == 0) {
+                toSkip = this->skips;
+                std::cout<<".";
+                std::cout.flush();
+            } else {
+                std::cout<<"_";
+                std::cout.flush();
+                toSkip--;
+                continue;
+            }
+            setCount++;
             PointPtr referencePoint = os->getReferencePoint();
             std::vector<ObjectPtr> objects = os->objects;
             objectCount += objects.size();
@@ -51,8 +69,6 @@ namespace ISM {
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
                 if (!generateJson) {
-                    std::cout<<".";
-                    std::cout.flush();
                     this->tableHelper->insertModelVoteSpecifier(vote);
                 } else {
                     if (first) {
@@ -69,7 +85,7 @@ namespace ISM {
             std::cout<<"done"<<std::endl;
             this->tableHelper->upsertModelPattern(
                 this->recordedPattern->name,
-                floor(((float)objectCount / (float)sets.size()) + 0.5),
+                floor(((float)objectCount / (float)setCount) + 0.5),
                 this->recordedPattern->minMaxFinder->getMaxSpread()
             );
         } else {

@@ -18,6 +18,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
     int objectCount = 0;
     int identifySum = 0;
     double confidenceSum = 0;
+    double thresholdConfidence = 0.8;
     for (auto& os : pattern->objectSets) {
 
         set<pair<string, string> > mappedTypes;
@@ -34,7 +35,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
         auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
             if (result->patternName == pattern->name) {
-                cout<<".";
+                cout<<(result->confidence > thresholdConfidence ? "." : ",");
                 cout.flush();
                 confidenceSum += result->confidence;
 
@@ -54,7 +55,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
     cout<<endl;
 
     double meanConfidence = confidenceSum / (double)idx;
-    cout<<(meanConfidence >= 0.8 ? "SUCCESS" : "FAILURE")<<" mean confidence for pattern '"<<pattern->name<<"' is "<<meanConfidence<<endl;
+    cout<<(meanConfidence >= thresholdConfidence ? "SUCCESS" : "FAILURE")<<" mean confidence for pattern '"<<pattern->name<<"' is "<<meanConfidence<<endl;
     if (detectGeneric) {
         double identifyRate = (double)identifySum / (double)objectCount;
         cout<<"Identification rate: "<<identifyRate<<endl;
