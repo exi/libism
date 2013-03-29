@@ -10,7 +10,7 @@ int main (int argc, char** argv) {
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
-        ("database-file,r", po::value<string>()->default_value("record.sqlite"), "database file to use")
+        ("database-file,f", po::value<string>()->default_value("record.sqlite"), "database file to use")
         ("pattern-name,p", po::value<vector<string> >(), "patters to train instead of all")
         ("skip-count,s", po::value<int>(), "skip number of training sets after every trained set")
     ;
