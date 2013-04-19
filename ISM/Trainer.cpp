@@ -11,6 +11,8 @@
 #include "VoteSpecifier.hpp"
 #include "Pose.hpp"
 #include "JsonStream.hpp"
+#include "Tracks.hpp"
+#include "StaticRelationHeuristic.hpp"
 
 namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
@@ -43,14 +45,65 @@ namespace ISM {
 
     void Trainer::learn(bool generateJson) {
         typedef MathHelper MH;
-        this->json<<"{";
+
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
+
+        int clusterId = 0;
+        TracksPtr tracks(new Tracks(sets));
+
+        while (true) {
+            auto heuristic = this->findHeuristicMatch(tracks);
+            if (!heuristic) {
+                break;
+            }
+
+            auto cluster = heuristic->cluster;
+            std::stringstream subPatternNameStream;
+            subPatternNameStream<<this->recordedPattern->name<<"_sub"<<clusterId;
+            std::string subPatternName = subPatternNameStream.str();
+
+            this->doTraining(cluster->toObjectSetVector(), subPatternName);
+            auto refTrack = heuristic->referenceTrack;
+            refTrack->type = subPatternName;
+            for (auto& obj : refTrack->objects) {
+                obj->type = subPatternName;
+                obj->observedId = "";
+            }
+            tracks->replace(cluster->tracks, refTrack);
+        }
+
+        //train remaining sets
+        this->doTraining(tracks->toObjectSetVector(), this->recordedPattern->name);
+    }
+
+    HeuristicPtr Trainer::findHeuristicMatch(const TracksPtr& tracks) {
+        HeuristicPtr bestHeuristic;
+
+        std::vector<HeuristicPtr> heuristics;
+        heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
+
+        for (auto& heuristic : heuristics) {
+            if (!heuristic->cluster) {
+                continue;
+            }
+            std::cout<<"heuristic results of "<<heuristic->name<<std::endl;
+            std::cout<<heuristic->cluster->tracks.size()<<" tracks, confidence: "<<heuristic->confidence<<std::endl;
+            if (heuristic->confidence > 0.5 && (!bestHeuristic || heuristic->confidence > bestHeuristic->confidence)) {
+                bestHeuristic = heuristic;
+            }
+        }
+
+        return bestHeuristic ? bestHeuristic : HeuristicPtr();
+    }
+
+    void Trainer::doTraining(std::vector<ObjectSetPtr> sets, std::string patternName) {
         int toSkip = 0;
         int setCount = 0;
         int objectCount = 0;
         bool first = true;
         std::string refType = "";
         std::string refId = "";
+
         for (ObjectSetPtr& os : sets) {
             if (toSkip == 0) {
                 toSkip = this->skips;
@@ -91,41 +144,27 @@ namespace ISM {
             objectCount += objects.size();
             for (ObjectPtr& o : objects) {
                 VoteSpecifierPtr vote = MathHelper::getVoteSpecifierToPose(o->pose, referencePose);
-                vote->patternName = this->recordedPattern->name;
+                vote->patternName = patternName;
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
-                if (!generateJson) {
-                    this->tableHelper->insertModelVoteSpecifier(vote);
-                    //auto rpoint = MH::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
-                    //auto rpose = MH::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
-                    //auto bpoint = MH::applyQuatAndRadiusToPose(rpose, vote->refToObjectQuat, vote->radius);
-                    //std::cout<<"projected pose:"<<MH::vectorToPoint(MH::getPoseVectorFromQuat(rpose->quat))<<std::endl;
-                    //std::cout<<"projected pose errors:"<<
-                        //(MH::getPoseVectorFromQuat(rpose->quat) - MH::getPoseVectorFromQuat(referencePose->quat)).norm()
-                        //<<","<<MH::getDistanceBetweenPoints(referencePose->point, rpose->point)<<std::endl;
-                    //std::cout<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
-                } else {
-                    if (first) {
-                        first = false;
-                    } else {
-                        this->json<<", "<<std::endl;
-                    }
-                    this->json<<ISM::json(o);
-                }
+                this->tableHelper->insertModelVoteSpecifier(vote);
+                //auto rpoint = MH::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
+                //auto rpose = MH::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
+                //auto bpoint = MH::applyQuatAndRadiusToPose(rpose, vote->refToObjectQuat, vote->radius);
+                //std::cout<<"projected pose:"<<MH::vectorToPoint(MH::getPoseVectorFromQuat(rpose->quat))<<std::endl;
+                //std::cout<<"projected pose errors:"<<
+                    //(MH::getPoseVectorFromQuat(rpose->quat) - MH::getPoseVectorFromQuat(referencePose->quat)).norm()
+                    //<<","<<MH::getDistanceBetweenPoints(referencePose->point, rpose->point)<<std::endl;
+                //std::cout<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
             }
         }
 
-        if (!generateJson) {
-            std::cout<<"done"<<std::endl;
-            this->tableHelper->upsertModelPattern(
-                this->recordedPattern->name,
-                floor(((float)objectCount / (float)setCount) + 0.5),
-                this->recordedPattern->minMaxFinder->getMaxSpread()
-            );
-        } else {
-            this->json<<"]"<<std::endl;
-            this->json<<"}";
-        }
+        std::cout<<"done"<<std::endl;
+        this->tableHelper->upsertModelPattern(
+            patternName,
+            floor(((float)objectCount / (float)setCount) + 0.5),
+            this->recordedPattern->minMaxFinder->getMaxSpread()
+        );
     }
 
     std::string Trainer::getJsonRepresentation(const std::string& patternName) {

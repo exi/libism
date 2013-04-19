@@ -2,11 +2,13 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include "ObjectSet.hpp"
 #include "Object.hpp"
 #include "TableHelper.hpp"
 #include "Pose.hpp"
+#include "Heuristic.hpp"
 
 namespace ISM {
     class Trainer {
@@ -25,6 +27,8 @@ namespace ISM {
 
         private:
             void learn(bool generateJson);
+            HeuristicPtr findHeuristicMatch(const TracksPtr& tracks);
+            void doTraining(const std::vector<ObjectSetPtr> sets, std::string patternName);
             void jsonPutPoint(const PointPtr& point);
             void jsonPutPose(const PosePtr& pose);
             void jsonPutQuaternion(const QuaternionPtr& quat);
