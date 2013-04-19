@@ -95,14 +95,7 @@ namespace ISM {
             if (cluster.size() < tracks->tracks.size() - 1 && cluster.size() > 1) {
                 double conf = 1 - (double)staticBreaksSum / (double)commonPositionsSum;
                 if (conf > this->confidence) {
-                    TrackPtr refTrack(new Track());
-                    for (size_t i = 0; i < first->objects.size(); i++) {
-                        auto obj = first->objects[i];
-                        auto objCopy = ObjectPtr(new Object(*obj));
-                        refTrack->objects.push_back(objCopy);
-                    }
                     this->cluster = TracksPtr(new Tracks(cluster));
-                    this->referenceTrack = refTrack;
                     this->confidence = conf;
                 }
             }

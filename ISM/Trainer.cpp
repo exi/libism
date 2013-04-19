@@ -62,12 +62,17 @@ namespace ISM {
             subPatternNameStream<<this->recordedPattern->name<<"_sub"<<clusterId;
             std::string subPatternName = subPatternNameStream.str();
 
-            this->doTraining(cluster->toObjectSetVector(), subPatternName);
-            auto refTrack = heuristic->referenceTrack;
-            refTrack->type = subPatternName;
-            for (auto& obj : refTrack->objects) {
-                obj->type = subPatternName;
-                obj->observedId = "";
+            auto refPoses = this->doTraining(cluster->toObjectSetVector(), subPatternName);
+            TrackPtr refTrack(new Track(subPatternName));
+            for (auto& pose : refPoses) {
+                refTrack->objects.push_back(
+                    ObjectPtr(
+                        new Object(
+                            subPatternName,
+                            pose
+                        )
+                    )
+                );
             }
             tracks->replace(cluster->tracks, refTrack);
         }
@@ -96,7 +101,7 @@ namespace ISM {
         return bestHeuristic ? bestHeuristic : HeuristicPtr();
     }
 
-    void Trainer::doTraining(std::vector<ObjectSetPtr> sets, std::string patternName) {
+    std::vector<PosePtr> Trainer::doTraining(std::vector<ObjectSetPtr> sets, std::string patternName) {
         int toSkip = 0;
         int setCount = 0;
         int objectCount = 0;
@@ -104,7 +109,10 @@ namespace ISM {
         std::string refType = "";
         std::string refId = "";
 
+        std::vector<PosePtr> refPoses;
+
         for (ObjectSetPtr& os : sets) {
+            std::cout<<"train "<<patternName<<" with "<<os<<std::endl;
             if (toSkip == 0) {
                 toSkip = this->skips;
                 std::cout<<".";
@@ -141,6 +149,8 @@ namespace ISM {
                 }
             }
 
+            refPoses.push_back(referencePose);
+
             objectCount += objects.size();
             for (ObjectPtr& o : objects) {
                 VoteSpecifierPtr vote = MathHelper::getVoteSpecifierToPose(o->pose, referencePose);
@@ -165,6 +175,8 @@ namespace ISM {
             floor(((float)objectCount / (float)setCount) + 0.5),
             this->recordedPattern->minMaxFinder->getMaxSpread()
         );
+
+        return refPoses;
     }
 
     std::string Trainer::getJsonRepresentation(const std::string& patternName) {

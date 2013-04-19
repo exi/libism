@@ -19,17 +19,26 @@ namespace ISM {
     }
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
-        this->results.clear();
         this->objectTypes.clear();
         this->inputSet = objectSet;
-        this->genericMode = genericMode;
 
         this->objectTypes = this->tableHelper->getObjectTypes();
 
         this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
         this->getPatternDefinitions();
 
-        this->calculateVotes();
+        std::cout<<"######"<<std::endl;
+        do {
+            this->results.clear();
+            this->again = false;
+            this->calculateVotes();
+            std::cout<<"-----"<<std::endl;
+
+            std::cout<<this->inputSet<<std::endl;
+            for (auto& res : this->results) {
+                std::cout<<res<<std::endl;
+            }
+        } while (this->again);
         return this->results;
     }
 
@@ -69,21 +78,35 @@ namespace ISM {
             }
         }
 
+        std::set<std::string> typesInInputSet;
+        for (auto& obj : this->inputSet->objects) {
+            typesInInputSet.insert(obj->type);
+        }
+
         for (auto& votePair : votesMap) {
             VotingSpace vs(votePair.second, this->sensitivity);
             if (vs.confidence != -1.0) {
-                this->results.push_back(
-                    RecognitionResultPtr(
-                        new RecognitionResult(
-                            votePair.first->name,
-                            vs.referencePose,
-                            vs.matchingObjects,
-                            vs.confidence,
-                            vs.idealPoints,
-                            votedPoints
-                        )
+                RecognitionResultPtr res(
+                    new RecognitionResult(
+                        votePair.first->name,
+                        vs.referencePose,
+                        vs.matchingObjects,
+                        vs.confidence,
+                        vs.idealPoints,
+                        votedPoints
                     )
                 );
+                // if we have an object on record with a name that matches a pattern name
+                // treat the referencePose as a new object and repeat the recognition to capture subscenes
+                if (
+                    this->objectDefinitions.find(res->patternName) != this->objectDefinitions.end() &&
+                    typesInInputSet.find(res->patternName) == typesInInputSet.end()
+                ) {
+                    ObjectPtr refObj(new Object(res->patternName, res->referencePose));
+                    this->inputSet->insert(refObj);
+                    this->again = true;
+                }
+                this->results.push_back(res);
             }
         }
     }

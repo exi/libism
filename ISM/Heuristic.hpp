@@ -13,7 +13,6 @@ namespace ISM {
             std::string name;
             double confidence = 0;
             TracksPtr cluster;
-            TrackPtr referenceTrack;
     };
 
     typedef boost::shared_ptr<Heuristic> HeuristicPtr;

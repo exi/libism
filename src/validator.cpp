@@ -46,8 +46,6 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
                         identifySum++;
                     }
                 }
-
-                break;
             }
         }
         idx++;
@@ -89,12 +87,20 @@ int main (int argc, char** argv) {
         auto patternNames = vm["pattern-name"].as<vector<string> >();
         for (auto& name : patternNames) {
             auto pattern = t.getRecordedPattern(name);
+            if (!pattern) {
+                cout<<"Pattern "<<name<<" not found!";
+                continue;
+            }
             validatePattern(pattern, r);
         }
     } else {
         auto patternNames = t.getRecordedPatternNames();
         for (auto& name : patternNames) {
             auto pattern = t.getRecordedPattern(name);
+            if (!pattern) {
+                cout<<"Pattern "<<name<<" not found!";
+                continue;
+            }
             validatePattern(pattern, r);
         }
     }
