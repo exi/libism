@@ -13,6 +13,7 @@
 #include "JsonStream.hpp"
 #include "Tracks.hpp"
 #include "StaticRelationHeuristic.hpp"
+#include "DirectionRelationHeuristic.hpp"
 
 namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
@@ -74,6 +75,7 @@ namespace ISM {
                     )
                 );
             }
+            clusterId++;
             tracks->replace(cluster->tracks, refTrack);
         }
 
@@ -86,6 +88,7 @@ namespace ISM {
 
         std::vector<HeuristicPtr> heuristics;
         heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
+        heuristics.push_back(HeuristicPtr(new DirectionRelationHeuristic(tracks)));
 
         for (auto& heuristic : heuristics) {
             if (!heuristic->cluster) {
@@ -111,8 +114,35 @@ namespace ISM {
 
         std::vector<PosePtr> refPoses;
 
+        TracksPtr tracks(new Tracks(sets));
+
+        {
+            double bestViewRatio = 0;
+            for (auto& track : tracks->tracks) {
+                int views = 0;
+                std::string refT;
+                std::string refI;
+                for (auto& obj : track->objects) {
+                    if (obj) {
+                        refT = obj->type;
+                        refI = obj->observedId;
+                        views++;
+                    }
+                }
+
+                double ratio = (double)views / (double)track->objects.size();
+                if (ratio > bestViewRatio) {
+                    refType = refT;
+                    refId = refI;
+                    bestViewRatio = ratio;
+                }
+            }
+        }
+
+        std::cout<<"choose ref "<<refType<<" : "<<refId<<std::endl;
+        std::cout<<"training "<<patternName<<" ";
+
         for (ObjectSetPtr& os : sets) {
-            std::cout<<"train "<<patternName<<" with "<<os<<std::endl;
             if (toSkip == 0) {
                 toSkip = this->skips;
                 std::cout<<".";
@@ -128,25 +158,15 @@ namespace ISM {
             setCount++;
             std::vector<ObjectPtr> objects = os->objects;
 
-            if (objectCount == 0) {
-                // pick reference object at random
-                ObjectPtr robj = objects[0];
-                referencePose = PosePtr(new Pose(*(robj->pose)));
-                refType = robj->type;
-                refId = robj->observedId;
-                //std::cout<<std::endl<<"chosen ref pose: "<<MH::vectorToPoint(MH::getPoseVectorFromQuat(referencePose->quat))<<std::endl;
-            } else {
-                // try to find the ref object again
-                for (auto& o : objects) {
-                    if (o->type == refType && o->observedId == refId) {
-                        referencePose = PosePtr(new Pose(*(o->pose)));
-                        break;
-                    }
+            for (auto& o : objects) {
+                if (o->type == refType && o->observedId == refId) {
+                    referencePose = PosePtr(new Pose(*(o->pose)));
+                    break;
                 }
-                if (!referencePose) {
-                    referencePose = PosePtr(new Pose(*(objects[0]->pose)));
-                    std::cout<<std::endl<<"cannot reidentify refobj"<<std::endl;
-                }
+            }
+            if (!referencePose) {
+                referencePose = PosePtr(new Pose(*(objects[0]->pose)));
+                std::cout<<std::endl<<"cannot reidentify refobj"<<std::endl;
             }
 
             refPoses.push_back(referencePose);

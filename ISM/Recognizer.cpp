@@ -27,17 +27,17 @@ namespace ISM {
         this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
         this->getPatternDefinitions();
 
-        std::cout<<"######"<<std::endl;
+        //std::cout<<"######"<<std::endl;
         do {
             this->results.clear();
             this->again = false;
             this->calculateVotes();
-            std::cout<<"-----"<<std::endl;
+            //std::cout<<"-----"<<std::endl;
 
-            std::cout<<this->inputSet<<std::endl;
-            for (auto& res : this->results) {
-                std::cout<<res<<std::endl;
-            }
+            //std::cout<<this->inputSet<<std::endl;
+            //for (auto& res : this->results) {
+            //    std::cout<<res<<std::endl;
+            //}
         } while (this->again);
         return this->results;
     }

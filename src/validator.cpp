@@ -39,6 +39,8 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
                 cout.flush();
                 confidenceSum += result->confidence;
 
+            }
+            if (result->confidence > thresholdConfidence) {
                 for (auto& obj : result->recognizedSet->objects) {
                     auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
                     if (match != mappedTypes.end()) {
