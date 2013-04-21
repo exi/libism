@@ -97,7 +97,8 @@ namespace ISM {
                     );
 
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
-                    if (distance <= sensitivity) {
+                    double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
+                    if (distance <= sensitivity && angle < 10.0) {
                         idealPoints.push_back(projectedPoint);
                         //found fit
                         break;

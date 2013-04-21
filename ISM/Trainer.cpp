@@ -48,6 +48,12 @@ namespace ISM {
         typedef MathHelper MH;
 
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
+        for (size_t i = 0; i < sets.size(); i++) {
+            if (sets[i]->objects.size() == 0) {
+                sets.erase(sets.begin() + i);
+                i--;
+            }
+        }
 
         int clusterId = 0;
         TracksPtr tracks(new Tracks(sets));
@@ -66,6 +72,11 @@ namespace ISM {
             auto refPoses = this->doTraining(cluster->toObjectSetVector(), subPatternName);
             TrackPtr refTrack(new Track(subPatternName));
             for (auto& pose : refPoses) {
+                if (!pose) {
+                    refTrack->objects.push_back(ObjectPtr());
+                    continue;
+                }
+
                 refTrack->objects.push_back(
                     ObjectPtr(
                         new Object(
@@ -140,7 +151,7 @@ namespace ISM {
         }
 
         std::cout<<"choose ref "<<refType<<" : "<<refId<<std::endl;
-        std::cout<<"training "<<patternName<<" ";
+        std::cout<<"training "<<patternName<<" "<<std::endl;
 
         for (ObjectSetPtr& os : sets) {
             if (toSkip == 0) {
@@ -160,13 +171,15 @@ namespace ISM {
 
             for (auto& o : objects) {
                 if (o->type == refType && o->observedId == refId) {
-                    referencePose = PosePtr(new Pose(*(o->pose)));
+                    referencePose.reset(new Pose(*(o->pose)));
                     break;
                 }
             }
-            if (!referencePose) {
-                referencePose = PosePtr(new Pose(*(objects[0]->pose)));
-                std::cout<<std::endl<<"cannot reidentify refobj"<<std::endl;
+            if (!referencePose && objects.size() > 0) {
+                referencePose.reset(new Pose(*(objects[0]->pose)));
+            } else if (!referencePose) {
+                refPoses.push_back(PosePtr());
+                continue;
             }
 
             refPoses.push_back(referencePose);

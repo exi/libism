@@ -66,7 +66,9 @@ namespace ISM {
                             votesMap[pattern] = std::vector<VotedPosePtr>();
                         }
 
-                        VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
+                        VotedPosePtr v(
+                            new VotedPose(pose, vote, object, (1.0 / pattern->expectedObjectCount) * object->confidence)
+                        );
                         votesMap[pattern].push_back(v);
 
                         if (votedPoints.find(object) == votedPoints.end()) {
@@ -103,6 +105,7 @@ namespace ISM {
                     typesInInputSet.find(res->patternName) == typesInInputSet.end()
                 ) {
                     ObjectPtr refObj(new Object(res->patternName, res->referencePose));
+                    refObj->confidence = vs.confidence;
                     this->inputSet->insert(refObj);
                     this->again = true;
                 }

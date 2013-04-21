@@ -113,6 +113,12 @@ namespace ISM {
         return eigenQuatToQuat(quatToEigenQuat(quat).normalized());
     }
 
+    double MathHelper::getAngleBetweenQuats(const QuaternionPtr& q1, const QuaternionPtr& q2) {
+        auto v1 = getPoseVectorFromQuat(q1);
+        auto v2 = getPoseVectorFromQuat(q2);
+        return rad2deg(acos(v1.dot(v2)));
+    }
+
     double MathHelper::getDistanceBetweenPoints(const PointPtr& p1, const PointPtr& p2) {
         return (pointToVector(p1) - pointToVector(p2)).norm();
     }

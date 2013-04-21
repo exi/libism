@@ -9,7 +9,7 @@
 namespace ISM {
     class DirectionRelationHeuristic: public Heuristic {
         public:
-            DirectionRelationHeuristic(TracksPtr tracks);
+            DirectionRelationHeuristic(const TracksPtr& tracks);
         private:
             Eigen::Vector3d getDirectionVector(const ObjectPtr& first, const ObjectPtr& second);
     };

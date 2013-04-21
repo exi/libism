@@ -8,10 +8,11 @@
 namespace ISM {
     class Heuristic {
         protected:
-            Heuristic(std::string name) : name(name) {};
+            Heuristic() : confidence(0) {}
+            Heuristic(std::string name) : name(name), confidence(0) {};
         public:
             std::string name;
-            double confidence = 0;
+            double confidence;
             TracksPtr cluster;
     };
 

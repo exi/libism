@@ -4,7 +4,7 @@
 #include "MathHelper.hpp"
 
 namespace ISM {
-    StaticRelationHeuristic::StaticRelationHeuristic(TracksPtr tracks) : Heuristic("StaticRelationHeuristic") {
+    StaticRelationHeuristic::StaticRelationHeuristic(const TracksPtr& tracks) : Heuristic("StaticRelationHeuristic") {
         typedef MathHelper MH;
 
         for (auto& first : tracks->tracks) {

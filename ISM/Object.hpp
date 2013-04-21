@@ -13,14 +13,15 @@ namespace ISM {
             std::string type;
             std::string observedId;
             PosePtr pose;
+            double confidence;
 
-            Object(const Object& other): type(other.type), observedId(other.observedId) {
+            Object(const Object& other): type(other.type), observedId(other.observedId), confidence(other.confidence) {
                 this->pose = PosePtr(new Pose(*other.pose));
             };
 
-            Object(std::string type, PosePtr pose, std::string observedId = ""): type(type), observedId(observedId), pose(pose) {};
+            Object(std::string type, PosePtr pose, std::string observedId = ""): type(type), observedId(observedId), pose(pose), confidence(1) {};
 
-            Object(std::string type, Pose* pose, std::string observedId = ""): type(type), observedId(observedId) {
+            Object(std::string type, Pose* pose, std::string observedId = ""): type(type), observedId(observedId), confidence(1) {
                 this->pose = PosePtr(pose);
             };
 

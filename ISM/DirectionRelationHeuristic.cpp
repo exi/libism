@@ -6,7 +6,7 @@
 #include "MathHelper.hpp"
 
 namespace ISM {
-    DirectionRelationHeuristic::DirectionRelationHeuristic(TracksPtr tracks) : Heuristic("DirectionRelationHeuristic") {
+    DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) : Heuristic("DirectionRelationHeuristic") {
         typedef MathHelper MH;
         typedef Eigen::Vector3d Vector;
 

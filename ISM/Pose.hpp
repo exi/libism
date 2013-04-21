@@ -21,7 +21,7 @@ namespace ISM {
             Pose(const Pose& other) {
                 this->point = PointPtr(new Point(*(other.point)));
                 this->quat = QuaternionPtr(new Quaternion(*(other.quat)));
-            }
+            };
 
             Pose(Point *p, Quaternion* q) {
                 this->point = PointPtr(p);

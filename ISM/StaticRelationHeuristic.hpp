@@ -7,6 +7,6 @@
 namespace ISM {
     class StaticRelationHeuristic: public Heuristic {
         public:
-            StaticRelationHeuristic(TracksPtr tracks);
+            StaticRelationHeuristic(const TracksPtr& tracks);
     };
 }
