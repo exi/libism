@@ -63,18 +63,7 @@ namespace ISM {
             subPatternNameStream<<this->recordedPattern->name<<"_sub"<<clusterId;
             std::string subPatternName = subPatternNameStream.str();
 
-            auto refPoses = this->doTraining(cluster->toObjectSetVector(), subPatternName);
-            TrackPtr refTrack(new Track(subPatternName));
-            for (auto& pose : refPoses) {
-                refTrack->objects.push_back(
-                    ObjectPtr(
-                        new Object(
-                            subPatternName,
-                            pose
-                        )
-                    )
-                );
-            }
+            auto refTrack = this->doTraining(cluster->toObjectSetVector(), subPatternName);
             clusterId++;
             tracks->replace(cluster->tracks, refTrack);
         }
@@ -96,7 +85,7 @@ namespace ISM {
             }
             std::cout<<"heuristic results of "<<heuristic->name<<std::endl;
             std::cout<<heuristic->cluster->tracks.size()<<" tracks, confidence: "<<heuristic->confidence<<std::endl;
-            if (heuristic->confidence > 0.5 && (!bestHeuristic || heuristic->confidence > bestHeuristic->confidence)) {
+            if (heuristic->confidence > 0.7 && (!bestHeuristic || heuristic->confidence > bestHeuristic->confidence)) {
                 bestHeuristic = heuristic;
             }
         }
@@ -104,15 +93,15 @@ namespace ISM {
         return bestHeuristic ? bestHeuristic : HeuristicPtr();
     }
 
-    std::vector<PosePtr> Trainer::doTraining(std::vector<ObjectSetPtr> sets, std::string patternName) {
+    TrackPtr Trainer::doTraining(std::vector<ObjectSetPtr> sets, std::string patternName) {
         int toSkip = 0;
         int setCount = 0;
-        int objectCount = 0;
+        double objectsWeightSum = 0;
         bool first = true;
         std::string refType = "";
         std::string refId = "";
 
-        std::vector<PosePtr> refPoses;
+        TrackPtr refTrack(new Track(patternName));
 
         TracksPtr tracks(new Tracks(sets));
 
@@ -143,6 +132,7 @@ namespace ISM {
         std::cout<<"training "<<patternName<<" ";
 
         for (ObjectSetPtr& os : sets) {
+            double setWeightSum = 0;
             if (toSkip == 0) {
                 toSkip = this->skips;
                 std::cout<<".";
@@ -169,9 +159,6 @@ namespace ISM {
                 std::cout<<std::endl<<"cannot reidentify refobj"<<std::endl;
             }
 
-            refPoses.push_back(referencePose);
-
-            objectCount += objects.size();
             for (ObjectPtr& o : objects) {
                 VoteSpecifierPtr vote = MathHelper::getVoteSpecifierToPose(o->pose, referencePose);
                 vote->patternName = patternName;
@@ -187,16 +174,37 @@ namespace ISM {
                     //<<","<<MH::getDistanceBetweenPoints(referencePose->point, rpose->point)<<std::endl;
                 //std::cout<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
             }
+
+            for (auto& obj : objects) {
+                setWeightSum += obj->weight;
+            }
+
+            auto refObj = ObjectPtr(
+                new Object(
+                    patternName,
+                    referencePose
+                )
+            );
+
+            refObj->weight = setWeightSum;
+
+            refTrack->objects.push_back(refObj);
+
+            objectsWeightSum += setWeightSum;
+
         }
 
-        std::cout<<"done"<<std::endl;
         this->tableHelper->upsertModelPattern(
             patternName,
-            floor(((float)objectCount / (float)setCount) + 0.5),
+            floor(((float)objectsWeightSum / (float)setCount) + 0.5),
             this->recordedPattern->minMaxFinder->getMaxSpread()
         );
 
-        return refPoses;
+        refTrack->calculateWeight();
+
+        std::cout<<"done ("<<refTrack->weight<<")"<<std::endl;
+
+        return refTrack;
     }
 
     std::string Trainer::getJsonRepresentation(const std::string& patternName) {

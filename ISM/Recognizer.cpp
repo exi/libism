@@ -21,6 +21,7 @@ namespace ISM {
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
         this->objectTypes.clear();
         this->inputSet = objectSet;
+        this->loops = 0;
 
         this->objectTypes = this->tableHelper->getObjectTypes();
 
@@ -39,7 +40,8 @@ namespace ISM {
             //    std::cout<<res<<std::endl;
             //}
         } while (this->again);
-        return this->results;
+        std::cout<<this->inputSet<<std::endl;
+        return this->filterResults(this->results);
     }
 
     void Recognizer::calculateVotes() {
@@ -66,7 +68,7 @@ namespace ISM {
                             votesMap[pattern] = std::vector<VotedPosePtr>();
                         }
 
-                        VotedPosePtr v(new VotedPose(pose, vote, object, 1.0 / pattern->expectedObjectCount));
+                        VotedPosePtr v(new VotedPose(pose, vote, object, object->weight / pattern->expectedMaxWeight));
                         votesMap[pattern].push_back(v);
 
                         if (votedPoints.find(object) == votedPoints.end()) {
@@ -78,21 +80,17 @@ namespace ISM {
             }
         }
 
-        std::set<std::string> typesInInputSet;
-        for (auto& obj : this->inputSet->objects) {
-            typesInInputSet.insert(obj->type);
-        }
-
+        VotingSpace vs(this->sensitivity);
         for (auto& votePair : votesMap) {
-            VotingSpace vs(votePair.second, this->sensitivity);
-            if (vs.confidence != -1.0) {
+            auto vsresults = vs.vote(votePair.second);
+            for (auto& vsres : vsresults) {
                 RecognitionResultPtr res(
                     new RecognitionResult(
                         votePair.first->name,
-                        vs.referencePose,
-                        vs.matchingObjects,
-                        vs.confidence,
-                        vs.idealPoints,
+                        vsres->referencePose,
+                        vsres->matchingObjects,
+                        vsres->confidence,
+                        vsres->idealPoints,
                         votedPoints
                     )
                 );
@@ -100,11 +98,17 @@ namespace ISM {
                 // treat the referencePose as a new object and repeat the recognition to capture subscenes
                 if (
                     this->objectDefinitions.find(res->patternName) != this->objectDefinitions.end() &&
-                    typesInInputSet.find(res->patternName) == typesInInputSet.end()
+                    this->loops < this->maxLoops
                 ) {
                     ObjectPtr refObj(new Object(res->patternName, res->referencePose));
+                    double weightSum = 0;
+                    for (auto& obj : vsres->matchingObjects->objects) {
+                        weightSum += obj->weight;
+                    }
+                    refObj->weight = weightSum;
                     this->inputSet->insert(refObj);
                     this->again = true;
+                    this->loops++;
                 }
                 this->results.push_back(res);
             }
@@ -126,5 +130,35 @@ namespace ISM {
         }
 
         this->patternDefinitions = this->tableHelper->getPatternDefinitionsByName(patternNames);
+    }
+
+    std::vector<RecognitionResultPtr> Recognizer::filterResults(const std::vector<RecognitionResultPtr>& results) {
+        std::map<std::string, std::vector<RecognitionResultPtr> > resultsForPattern;
+        for (auto& res : results) {
+            auto it = resultsForPattern.find(res->patternName);
+            if (it == resultsForPattern.end()) {
+                std::vector<RecognitionResultPtr> p;
+                p.push_back(res);
+                resultsForPattern.insert(std::make_pair(res->patternName, p));
+            } else {
+                (*it).second.push_back(res);
+            }
+        }
+
+        std::vector<RecognitionResultPtr> ret;
+
+        for (auto& patternPair : resultsForPattern) {
+            auto rlist = patternPair.second;
+            std::sort(rlist.begin(), rlist.end(), [](const RecognitionResultPtr& o1, const RecognitionResultPtr& o2) {
+                return o1->confidence > o2->confidence;
+            });
+            ret.push_back(rlist[0]);
+        }
+
+        for (auto& r : ret) {
+            std::cout<<r<<std::endl;
+        }
+
+        return ret;
     }
 }

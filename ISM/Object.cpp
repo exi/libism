@@ -3,7 +3,7 @@
 
 namespace ISM{
     std::ostream& operator<<(std::ostream &strm, const ISM::Object &o) {
-        return strm<<"object: ["<<o.type<<";"<<o.observedId<<";"<<o.pose<<"]";
+        return strm<<"object: ["<<o.type<<";"<<o.observedId<<";"<<o.weight<<";"<<o.pose<<"]";
     }
 
     std::ostream& operator<<(std::ostream &strm, const ISM::ObjectPtr &o) {

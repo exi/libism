@@ -13,6 +13,8 @@ namespace ISM {
         ObjectSetPtr inputSet;
         double sensitivity;
         bool again = false;
+        int maxLoops = 10;
+        int loops = 0;
         std::set<std::string> objectTypes;
 
         ObjectTypeToVoteMap objectDefinitions;
@@ -30,6 +32,7 @@ namespace ISM {
         private:
             void calculateVotes();
             void getPatternDefinitions();
+            std::vector<RecognitionResultPtr> filterResults(const std::vector<RecognitionResultPtr>& results);
             PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
     };
     typedef boost::shared_ptr<Recognizer> RecognizerPtr;

@@ -26,6 +26,10 @@ namespace ISM {
             }
             setIdx++;
         }
+
+        for (auto& track : tracks) {
+            track->calculateWeight();
+        }
     }
 
     Tracks::Tracks(std::vector<TrackPtr> tracks) {

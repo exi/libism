@@ -6,10 +6,10 @@
 namespace ISM {
     struct Pattern {
         std::string name;
-        int expectedObjectCount;
+        int expectedMaxWeight;
         double referencePointSpread;
-        Pattern(std::string name, int expectedObjectCount, double referencePointSpread):
-            name(name), expectedObjectCount(expectedObjectCount), referencePointSpread(referencePointSpread) {};
+        Pattern(std::string name, int expectedMaxWeight, double referencePointSpread):
+            name(name), expectedMaxWeight(expectedMaxWeight), referencePointSpread(referencePointSpread) {};
     };
 
     typedef boost::shared_ptr<Pattern> PatternPtr;

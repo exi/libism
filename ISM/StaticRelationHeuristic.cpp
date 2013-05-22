@@ -8,9 +8,9 @@ namespace ISM {
         typedef MathHelper MH;
 
         for (auto& first : tracks->tracks) {
-            std::vector<TrackPtr> cluster;
-            int staticBreaksSum = 0;
-            int commonPositionsSum = 0;
+            TrackPtr currentBest;
+            int bestStaticBreaks = 0;
+            int bestCommonPositions = 0;
 
             for (auto& second : tracks->tracks) {
                 if (first == second) {
@@ -83,18 +83,22 @@ namespace ISM {
 
                 if (
                     (double)staticBreaks < ((double)commonPositions) * 0.01 &&
-                    commonPositions > (double)first->objects.size() * 0.5
+                    commonPositions > (double)first->objects.size() * 0.5 &&
+                    (!currentBest || staticBreaks < bestStaticBreaks)
                 ) {
-                    cluster.push_back(second);
-                    staticBreaksSum += staticBreaks;
-                    commonPositionsSum += commonPositions;
+                    currentBest = second;
+                    bestStaticBreaks = staticBreaks;
+                    bestCommonPositions = commonPositions;
                 }
             }
 
             //exclude clusters which contain all tracks
-            if (cluster.size() < tracks->tracks.size() - 1 && cluster.size() > 1) {
-                double conf = 1 - (double)staticBreaksSum / (double)commonPositionsSum;
+            if (currentBest) {
+                double conf = 1 - (double)bestStaticBreaks / (double)bestCommonPositions;
                 if (conf > this->confidence) {
+                    std::vector<TrackPtr> cluster;
+                    cluster.push_back(first);
+                    cluster.push_back(currentBest);
                     this->cluster = TracksPtr(new Tracks(cluster));
                     this->confidence = conf;
                 }
