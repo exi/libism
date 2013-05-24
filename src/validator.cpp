@@ -11,16 +11,20 @@ using namespace std;
 namespace po = boost::program_options;
 
 bool detectGeneric = false;
+int onlyN = -1;
 
 void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
-    cout<<"validate pattern "<<pattern->name<<endl;
+    cout << "validate pattern " << pattern->name << endl;
     int idx = 0;
     int objectCount = 0;
     int identifySum = 0;
     double confidenceSum = 0;
     double thresholdConfidence = 0.8;
     for (auto& os : pattern->objectSets) {
-
+        if (onlyN >= 0 && onlyN != idx) {
+            idx++;
+            continue;
+        }
         set<pair<string, string> > mappedTypes;
 
         if (detectGeneric) {
@@ -34,45 +38,51 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
 
         auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
-            if (result->patternName == pattern->name) {
-                cout<<(result->confidence > thresholdConfidence ? "." : ",");
-                cout.flush();
-                confidenceSum += result->confidence;
-
-            }
-            if (result->confidence > thresholdConfidence) {
-                for (auto& obj : result->recognizedSet->objects) {
-                    auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
-                    if (match != mappedTypes.end()) {
-                        mappedTypes.erase(match);
-                        identifySum++;
+            if (result->patternName.find(pattern->name) != string::npos) {
+                if (result->confidence > thresholdConfidence) {
+                    for (auto& obj : result->recognizedSet->objects) {
+                        auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
+                        if (match != mappedTypes.end()) {
+                            mappedTypes.erase(match);
+                            identifySum++;
+                        }
                     }
                 }
+                if (result->patternName == pattern->name) {
+                    cout << (result->confidence > thresholdConfidence ? "." : ",");
+                    cout.flush();
+                    confidenceSum += result->confidence;
+                }
             }
+//            cout << result << endl;
         }
         idx++;
+        if (onlyN >= 0 && onlyN - 1 == idx) {
+            break;
+        }
     }
-    cout<<endl;
+    cout << endl;
 
-    double meanConfidence = confidenceSum / (double)idx;
-    cout<<(meanConfidence >= thresholdConfidence ? "SUCCESS" : "FAILURE")<<" mean confidence for pattern '"<<pattern->name<<"' is "<<meanConfidence<<endl;
+    double meanConfidence = confidenceSum / (double) idx;
+    cout << (meanConfidence >= thresholdConfidence ? "SUCCESS" : "FAILURE") << " mean confidence for pattern '"
+            << pattern->name << "' is " << meanConfidence << endl;
     if (detectGeneric) {
-        double identifyRate = (double)identifySum / (double)objectCount;
-        cout<<"Identification rate: "<<identifyRate<<endl;
+        double identifyRate = (double) identifySum / (double) objectCount;
+        cout << "Identification rate: " << identifyRate << endl;
     }
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
     double sensitivity = 0.0001;
 
     po::options_description desc("Allowed options");
-    desc.add_options()
-        ("help,h", "produce help message")
-        ("database-file,r", po::value<string>()->default_value("record.sqlite"), "database file to use")
-        ("generic-mode,g", po::bool_switch(&detectGeneric), "test object type inference by removing object type and id from recognition input")
-        ("sensitivity,s", po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")
-        ("pattern-name,p", po::value<vector<string> >(), "patters to validate instead of all")
-    ;
+    desc.add_options()("help,h", "produce help message")("database-file,d",
+            po::value<string>()->default_value("record.sqlite"), "database file to use")("generic-mode,g",
+            po::bool_switch(&detectGeneric),
+            "test object type inference by removing object type and id from recognition input")("sensitivity,s",
+            po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")("pattern-name,p",
+            po::value<vector<string> >(), "patters to validate instead of all")("onlyN,o",
+            po::value<int>(&onlyN)->default_value(-1), "only the n'th set");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -90,7 +100,7 @@ int main (int argc, char** argv) {
         for (auto& name : patternNames) {
             auto pattern = t.getRecordedPattern(name);
             if (!pattern) {
-                cout<<"Pattern "<<name<<" not found!";
+                cout << "Pattern " << name << " not found!";
                 continue;
             }
             validatePattern(pattern, r);
@@ -100,7 +110,7 @@ int main (int argc, char** argv) {
         for (auto& name : patternNames) {
             auto pattern = t.getRecordedPattern(name);
             if (!pattern) {
-                cout<<"Pattern "<<name<<" not found!";
+                cout << "Pattern " << name << " not found!";
                 continue;
             }
             validatePattern(pattern, r);

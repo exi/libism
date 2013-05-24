@@ -9,35 +9,38 @@
 #include "MathHelper.hpp"
 
 namespace ISM {
-    VotingSpace::VotingSpace(const std::vector<VotedPosePtr>& votes, double binSize):
-                votes(votes), binSize(binSize), confidence(0.0) {
+    std::vector<VotingSpaceResultPtr> VotingSpace::vote(const std::vector<VotedPosePtr>& votes) {
+        this->voteMap.clear();
+
         for (const VotedPosePtr& vote : votes) {
             PointPtr point = vote->pose->point;
             VotingBinPtr bin = this->getBin(point->x, point->y, point->z);
             bin->insert(vote);
         }
 
-        double confidence = -1.0;
-        VotingBinResultPtr maxBin;
+        std::vector<VotingSpaceResultPtr> results;
 
         for (auto& xitem : this->voteMap) {
             for (auto& yitem : xitem.second) {
                 for (auto& zitem : yitem.second) {
-                    VotingBinResultPtr res = zitem.second->getResults(binSize);
-                    if (res->confidence > confidence) {
-                        confidence = res->confidence;
-                        maxBin = res;
+                    std::vector<VotingBinResultPtr> vresults = zitem.second->getResults(this->binSize);
+                    std::cout << vresults.size() << " results from bin " <<
+                            xitem.first << ", " << yitem.first << ", " << zitem.first << std::endl;
+                    for (auto& res : vresults) {
+                        if (res->confidence > 0) {
+                            VotingSpaceResultPtr vres(new VotingSpaceResult());
+                            vres->confidence = res->confidence;
+                            vres->matchingObjects = res->objects;
+                            vres->idealPoints = res->idealPoints;
+                            vres->referencePose = res->referencePose;
+                            results.push_back(vres);
+                        }
                     }
                 }
             }
         }
 
-        this->confidence = confidence;
-        if (confidence != -1.0) {
-            this->referencePose = maxBin->referencePose;
-            this->matchingObjects = maxBin->objects;
-            this->idealPoints = maxBin->idealPoints;
-        }
+        return results;
     }
 
     VotingBinPtr VotingSpace::getBin(double x, double y, double z) {

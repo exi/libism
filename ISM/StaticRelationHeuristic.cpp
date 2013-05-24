@@ -8,9 +8,9 @@ namespace ISM {
         typedef MathHelper MH;
 
         for (auto& first : tracks->tracks) {
-            std::vector<TrackPtr> cluster;
-            int staticBreaksSum = 0;
-            int commonPositionsSum = 0;
+            TrackPtr currentBest;
+            int bestStaticBreaks = 0;
+            int bestCommonPositions = 0;
 
             for (auto& second : tracks->tracks) {
                 if (first == second) {
@@ -21,10 +21,10 @@ namespace ISM {
                  * What we do:
                  * Calculate a vote from second to first (using first as the reference pose).
                  * Use that vote on the next frame to search first, looking from second.
-                 * If the miss alignment is more than 5% of the average position difference between first and second,
+                 * If the miss alignment is more than 10% of the average position difference between first and second,
                  * incease staticBreaks and recalculate the vote.
                  *
-                 * At the end, if the staticBreaks are below 1% of the sample range,
+                 * At the end, if the staticBreaks are below 5% of the sample range,
                  * and they appear together in more than 95% of the frames,
                  * add second to the cluster with first as the reference point.
                  */
@@ -50,7 +50,7 @@ namespace ISM {
 
                 averageDistance /= (double)commonPositions;
 
-                double maxDeviation = averageDistance * 0.05;
+                double maxDeviation = averageDistance * 0.1;
 
                 for (size_t i = 0; i < first->objects.size(); i++) {
                     auto firstObject = first->objects[i];
@@ -82,19 +82,23 @@ namespace ISM {
                 }
 
                 if (
-                    (double)staticBreaks < ((double)commonPositions) * 0.01 &&
-                    commonPositions > (double)first->objects.size() * 0.5
+                    (double)staticBreaks < ((double)commonPositions) * 0.05 &&
+                    commonPositions > (double)first->objects.size() * 0.5 &&
+                    (!currentBest || staticBreaks < bestStaticBreaks)
                 ) {
-                    cluster.push_back(second);
-                    staticBreaksSum += staticBreaks;
-                    commonPositionsSum += commonPositions;
+                    currentBest = second;
+                    bestStaticBreaks = staticBreaks;
+                    bestCommonPositions = commonPositions;
                 }
             }
 
             //exclude clusters which contain all tracks
-            if (cluster.size() < tracks->tracks.size() - 1 && cluster.size() > 1) {
-                double conf = 1 - (double)staticBreaksSum / (double)commonPositionsSum;
+            if (currentBest) {
+                double conf = 1 - (double)bestStaticBreaks / (double)bestCommonPositions;
                 if (conf > this->confidence) {
+                    std::vector<TrackPtr> cluster;
+                    cluster.push_back(first);
+                    cluster.push_back(currentBest);
                     this->cluster = TracksPtr(new Tracks(cluster));
                     this->confidence = conf;
                 }

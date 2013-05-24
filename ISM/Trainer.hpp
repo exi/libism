@@ -28,7 +28,7 @@ namespace ISM {
         private:
             void learn(bool generateJson);
             HeuristicPtr findHeuristicMatch(const TracksPtr& tracks);
-            std::vector<PosePtr> doTraining(const std::vector<ObjectSetPtr> sets, std::string patternName);
+            TrackPtr doTraining(const std::vector<ObjectSetPtr> sets, std::string patternName);
             void jsonPutPoint(const PointPtr& point);
             void jsonPutPose(const PosePtr& pose);
             void jsonPutQuaternion(const QuaternionPtr& quat);

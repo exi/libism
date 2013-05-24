@@ -1,3 +1,5 @@
+#pragma once
+
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include "ObjectSet.hpp"
@@ -11,7 +13,7 @@ namespace ISM {
         double confidence;
         std::vector<PointPtr> idealPoints;
 
-        VotingBinResult(const VotingBinResult& other): confidence(confidence) {
+        VotingBinResult(const VotingBinResult& other): confidence(other.confidence) {
             objects = ObjectSetPtr(new ObjectSet(*(other.objects)));
             referencePose = PosePtr(new Pose(*(other.referencePose)));
         }

@@ -6,7 +6,7 @@
 
 using namespace ISM;
 
-int main (int argc, char** argv) {
+int main () {
     double directioncos = cos(0.0 * (boost::math::constants::pi<double>() / 180.0));
     double directionsin = sin(0.0 * (boost::math::constants::pi<double>() / 180.0));
 

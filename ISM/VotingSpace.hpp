@@ -7,19 +7,16 @@
 #include "VotedPose.hpp"
 #include "ObjectSet.hpp"
 #include "VotingBin.hpp"
+#include "VotingSpaceResult.hpp"
 
 namespace ISM {
     class VotingSpace {
-        std::vector<VotedPosePtr> votes;
         double binSize;
         std::map<int , std::map<int, std::map<int, VotingBinPtr> > > voteMap;
         public:
-            PosePtr referencePose;
-            ObjectSetPtr matchingObjects;
-            double confidence;
-            std::vector<PointPtr> idealPoints;
+            VotingSpace(double binSize = 1.0) : binSize(binSize) { };
 
-            VotingSpace(const std::vector<VotedPosePtr>& votes, double binSize);
+            std::vector<VotingSpaceResultPtr> vote(const std::vector<VotedPosePtr>& votes);
         private:
             VotingBinPtr getBin(double x, double y, double z);
     };

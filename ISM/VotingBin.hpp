@@ -19,7 +19,7 @@ namespace ISM {
             VotingBin() {};
 
             void insert(const VotedPosePtr& vote);
-            VotingBinResultPtr getResults(double sensitivity);
+            std::vector<VotingBinResultPtr> getResults(double sensitivity);
         private:
             std::stack<VotedPosePtr> fittingStack;
             std::vector<PointPtr> idealPoints;

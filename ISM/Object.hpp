@@ -8,24 +8,29 @@
 #include "Serializable.hpp"
 
 namespace ISM {
-    class Object : public Serializable {
+    class Object: public Serializable {
         public:
             std::string type;
             std::string observedId;
             PosePtr pose;
+            double weight;
             double confidence;
 
-            Object(const Object& other): type(other.type), observedId(other.observedId), confidence(other.confidence) {
+            Object(const Object& other) :
+                    type(other.type), observedId(other.observedId), weight(other.weight), confidence(other.confidence) {
                 this->pose = PosePtr(new Pose(*other.pose));
             };
 
-            Object(std::string type, PosePtr pose, std::string observedId = ""): type(type), observedId(observedId), pose(pose), confidence(1) {};
+            Object(std::string type, PosePtr pose, std::string observedId = "") :
+                    type(type), observedId(observedId), pose(pose), weight(1), confidence(1) {
+            };
 
-            Object(std::string type, Pose* pose, std::string observedId = ""): type(type), observedId(observedId), confidence(1) {
+            Object(std::string type, Pose* pose, std::string observedId = "") :
+                    type(type), observedId(observedId), weight(1), confidence(1) {
                 this->pose = PosePtr(pose);
             };
 
-            virtual void serialize(std::ostream& strm) const;
+            void serialize(std::ostream& strm) const;
     };
 
     typedef boost::shared_ptr<Object> ObjectPtr;

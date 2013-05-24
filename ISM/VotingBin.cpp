@@ -18,54 +18,60 @@ namespace ISM {
         idIt->second.push_back(vote);
     }
 
-    VotingBinResultPtr VotingBin::getResults(double sensitivity) {
+    std::vector<VotingBinResultPtr> VotingBin::getResults(double sensitivity) {
+        std::vector<VotingBinResultPtr> results;
         bool finished = false;
         auto typeIt = votes.begin();
         auto typeItEnd = votes.end();
-        for (; typeIt != typeItEnd && !finished; typeIt++) {
+        for (; typeIt != typeItEnd; typeIt++) {
             auto idIt = typeIt->second.begin();
             auto idItEnd = typeIt->second.end();
-            for (; idIt != idItEnd && !finished; idIt++) {
+            for (; idIt != idItEnd; idIt++) {
                 auto voteIt = idIt->second.begin();
                 auto voteItEnd = idIt->second.end();
-                for (; voteIt != voteItEnd && !finished; voteIt++) {
-                    fittingPose = (*voteIt)->pose;
-                    currentType = typeIt;
-                    currentId = idIt;
-                    fittingStack = std::stack<VotedPosePtr>();
-                    fittingStack.push(*voteIt);
-                    takenSources.clear();
-                    takenSources.insert((*voteIt)->source);
-                    idealPoints.clear();
+                for (; voteIt != voteItEnd; voteIt++) {
+                    this->fittingPose = (*voteIt)->pose;
+                    this->currentType = typeIt;
+                    this->currentId = idIt;
+                    this->fittingStack = std::stack<VotedPosePtr>();
+                    this->fittingStack.push(*voteIt);
+                    this->takenSources.clear();
+                    this->takenSources.insert((*voteIt)->source);
+                    this->idealPoints.clear();
                     PointPtr projectedPoint = MathHelper::getOriginPoint(
-                        fittingPose,
+                        this->fittingPose,
                         (*voteIt)->vote->refToObjectQuat,
                         (*voteIt)->vote->radius
                     );
-                    idealPoints.push_back(projectedPoint);
-                    finished = searchFit(sensitivity);
+                    this->idealPoints.push_back(projectedPoint);
+                    if (searchFit(sensitivity)) {
+                        double confidence = 0;
+                        ObjectSetPtr os(new ObjectSet());
+                        while (!this->fittingStack.empty()) {
+                            VotedPosePtr p = this->fittingStack.top();
+                            this->fittingStack.pop();
+                            confidence += p->confidence;
+                            ObjectPtr o(new Object(*(p->source)));
+                            o->observedId = p->vote->observedId;
+                            o->type = p->vote->objectType;
+                            os->insert(o);
+                        }
+
+                        VotingBinResultPtr r(
+                            new VotingBinResult(
+                                os,
+                                this->fittingPose,
+                                confidence,
+                                std::vector<PointPtr>(this->idealPoints)
+                            )
+                        );
+                        results.push_back(r);
+                    }
                 }
             }
         }
 
-        ObjectSetPtr os(new ObjectSet());
-        if (finished) {
-            double confidence = 0;
-            while (!fittingStack.empty()) {
-                VotedPosePtr p = fittingStack.top();
-                fittingStack.pop();
-                confidence += p->confidence;
-                ObjectPtr o(new Object(*(p->source)));
-                o->observedId = p->vote->observedId;
-                o->type = p->vote->objectType;
-                os->insert(o);
-            }
-
-            return VotingBinResultPtr(new VotingBinResult(os, fittingPose, confidence, idealPoints));
-        } else {
-            PosePtr p;
-            return VotingBinResultPtr(new VotingBinResult(os, p, -1.0));
-        }
+        return results;
     }
 
     bool VotingBin::searchFit(double sensitivity) {
@@ -82,9 +88,12 @@ namespace ISM {
 
                 auto voteIt = idIt->second.begin();
                 auto voteItEnd = idIt->second.end();
-                VotedPosePtr vote;
+                double bestAngle;
+                VotedPosePtr bestVote;
+                PointPtr bestPoint;
+
                 for (; voteIt != voteItEnd; voteIt++) {
-                    vote = *voteIt;
+                    VotedPosePtr vote = *voteIt;
 
                     if (takenSources.find(vote->source) != takenSources.end()) {
                         continue;
@@ -99,17 +108,22 @@ namespace ISM {
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
                     if (distance <= sensitivity && angle < 10.0) {
-                        idealPoints.push_back(projectedPoint);
-                        //found fit
-                        break;
+                        if (    !bestVote ||
+                                bestVote->confidence < vote->confidence ||
+                                (bestVote->confidence == vote->confidence && bestAngle > angle)) {
+                            bestAngle = angle;
+                            bestVote = vote;
+                            bestPoint = projectedPoint;
+                        }
                     }
                 }
 
-                if (voteIt == voteItEnd) {
+                if (!bestVote) {
                     return false;
                 } else {
-                    takenSources.insert(vote->source);
-                    fittingStack.push(vote);
+                    idealPoints.push_back(bestPoint);
+                    takenSources.insert(bestVote->source);
+                    fittingStack.push(bestVote);
                 }
             }
         }
