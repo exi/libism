@@ -16,6 +16,7 @@ int onlyN = -1;
 void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
     cout << "validate pattern " << pattern->name << endl;
     int idx = 0;
+    int setCount = 0;
     int objectCount = 0;
     int identifySum = 0;
     double confidenceSum = 0;
@@ -35,6 +36,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
                 obj->observedId = "";
             }
         }
+        setCount++;
 
         auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
@@ -63,7 +65,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
     }
     cout << endl;
 
-    double meanConfidence = confidenceSum / (double) idx;
+    double meanConfidence = confidenceSum / (double) setCount;
     cout << (meanConfidence >= thresholdConfidence ? "SUCCESS" : "FAILURE") << " mean confidence for pattern '"
             << pattern->name << "' is " << meanConfidence << endl;
     if (detectGeneric) {
@@ -73,7 +75,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
 }
 
 int main(int argc, char** argv) {
-    double sensitivity = 0.0001;
+    double sensitivity = 0.005;
 
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "produce help message")("database-file,d",

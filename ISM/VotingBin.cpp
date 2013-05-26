@@ -20,7 +20,6 @@ namespace ISM {
 
     std::vector<VotingBinResultPtr> VotingBin::getResults(double sensitivity) {
         std::vector<VotingBinResultPtr> results;
-        bool finished = false;
         auto typeIt = votes.begin();
         auto typeItEnd = votes.end();
         for (; typeIt != typeItEnd; typeIt++) {
@@ -66,6 +65,7 @@ namespace ISM {
                             )
                         );
                         results.push_back(r);
+                        return results;
                     }
                 }
             }
@@ -88,10 +88,8 @@ namespace ISM {
 
                 auto voteIt = idIt->second.begin();
                 auto voteItEnd = idIt->second.end();
-                double bestAngle;
-                VotedPosePtr bestVote;
-                PointPtr bestPoint;
 
+                bool found = false;
                 for (; voteIt != voteItEnd; voteIt++) {
                     VotedPosePtr vote = *voteIt;
 
@@ -108,22 +106,16 @@ namespace ISM {
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
                     if (distance <= sensitivity && angle < 10.0) {
-                        if (    !bestVote ||
-                                bestVote->confidence < vote->confidence ||
-                                (bestVote->confidence == vote->confidence && bestAngle > angle)) {
-                            bestAngle = angle;
-                            bestVote = vote;
-                            bestPoint = projectedPoint;
-                        }
+                        idealPoints.push_back(projectedPoint);
+                        takenSources.insert(vote->source);
+                        fittingStack.push(vote);
+                        found = true;
+                        break;
                     }
                 }
 
-                if (!bestVote) {
+                if (!found){
                     return false;
-                } else {
-                    idealPoints.push_back(bestPoint);
-                    takenSources.insert(bestVote->source);
-                    fittingStack.push(bestVote);
                 }
             }
         }

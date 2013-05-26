@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <boost/foreach.hpp>
 
 #include "MathHelper.hpp"
@@ -11,19 +12,18 @@
 
 namespace ISM {
     Recognizer::Recognizer(const std::string& dbfilename, double sensitivity) :
-            sensitivity(sensitivity), again(false), loop(0) {
+            sensitivity(sensitivity), again(false) {
         this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
     }
 
     Recognizer::Recognizer(double sensitivity, const std::string& dbfilename) :
-            sensitivity(sensitivity), again(false), loop(0) {
+            sensitivity(sensitivity), again(false) {
         this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
     }
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
         this->objectTypes.clear();
         this->inputSet = objectSet;
-        this->loop = 0;
 
         this->objectTypes = this->tableHelper->getObjectTypes();
 
@@ -31,18 +31,24 @@ namespace ISM {
         this->getPatternDefinitions();
 
 //        std::cout<<"######"<<std::endl;
+        int loops = 0, maxLoops = 2;
         do {
             this->results.clear();
             this->again = false;
+//            std::cout<<"-----"<<std::endl;
             this->calculateVotes();
-            //std::cout<<"-----"<<std::endl;
+            loops++;
 
             //std::cout<<this->inputSet<<std::endl;
             //for (auto& res : this->results) {
             //    std::cout<<res<<std::endl;
             //}
-        } while (this->again);
+        } while (this->again && loops <= maxLoops);
 //        std::cout << "InputSet: " << this->inputSet << std::endl;
+//        std::cout << "Results: " << std::endl;
+//        for (auto& r : this->results) {
+//            std::cout << r << std::endl;
+//        }
 //        return this->results;
         return this->filterResults(this->results);
     }
@@ -86,21 +92,17 @@ namespace ISM {
         }
 
         VotingSpace vs(this->sensitivity);
-        std::set<std::string> inputSetTypes;
-        for (auto& input : this->inputSet->objects) {
-            inputSetTypes.insert(input->type);
-        }
 
         for (auto& votePair : votesMap) {
             auto vsresults = vs.vote(votePair.second);
+            int added = 0;
             for (auto& vsres : vsresults) {
                 RecognitionResultPtr res(
                         new RecognitionResult(votePair.first->name, vsres->referencePose, vsres->matchingObjects,
                                 vsres->confidence, vsres->idealPoints, votedPoints));
                 // if we have an object on record with a name that matches a pattern name
                 // treat the referencePose as a new object and repeat the recognition to capture subscenes
-                if (this->objectDefinitions.find(res->patternName) != this->objectDefinitions.end() &&
-                        this->loop < this->maxLoops) {
+                if (this->objectDefinitions.find(res->patternName) != this->objectDefinitions.end()) {
                     ObjectPtr refObj(new Object(res->patternName, res->referencePose));
                     refObj->confidence = vsres->confidence;
                     double weightSum = 0;
@@ -108,14 +110,37 @@ namespace ISM {
                         weightSum += obj->weight;
                     }
                     refObj->weight = weightSum;
-                    this->inputSet->insert(refObj);
+                    if (!this->objectAlreadyInSet(refObj)) {
+                        added++;
+                        this->inputSet->insert(refObj);
 
-                    this->loop++;
-                    this->again = true;
+                        this->again = true;
+                    }
                 }
                 this->results.push_back(res);
             }
+            std::cout << "voting round for " << votePair.first->name << " added " << added <<std::endl;
         }
+    }
+
+    bool Recognizer::objectAlreadyInSet(const ObjectPtr& o) {
+        for (auto& setObj : this->inputSet->objects) {
+            if (
+                    setObj->type == o->type &&
+                    setObj->observedId == o->observedId &&
+                    setObj->weight == o->weight &&
+                    setObj->pose->point->x == o->pose->point->x &&
+                    setObj->pose->point->y == o->pose->point->y &&
+                    setObj->pose->point->z == o->pose->point->z &&
+                    setObj->pose->quat->x == o->pose->quat->x &&
+                    setObj->pose->quat->y == o->pose->quat->y &&
+                    setObj->pose->quat->z == o->pose->quat->z &&
+                    setObj->pose->quat->w == o->pose->quat->w
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     PosePtr Recognizer::calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const {

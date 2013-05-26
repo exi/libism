@@ -24,8 +24,6 @@ namespace ISM {
             for (auto& yitem : xitem.second) {
                 for (auto& zitem : yitem.second) {
                     std::vector<VotingBinResultPtr> vresults = zitem.second->getResults(this->binSize);
-                    std::cout << vresults.size() << " results from bin " <<
-                            xitem.first << ", " << yitem.first << ", " << zitem.first << std::endl;
                     for (auto& res : vresults) {
                         if (res->confidence > 0) {
                             VotingSpaceResultPtr vres(new VotingSpaceResult());

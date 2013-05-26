@@ -13,8 +13,6 @@ namespace ISM {
         ObjectSetPtr inputSet;
         double sensitivity;
         bool again;
-        int loop;
-        static const int maxLoops = 10;
         std::set<std::string> objectTypes;
 
         ObjectTypeToVoteMap objectDefinitions;
@@ -32,6 +30,7 @@ namespace ISM {
         private:
             void calculateVotes();
             void getPatternDefinitions();
+            bool objectAlreadyInSet(const ObjectPtr& o);
             std::vector<RecognitionResultPtr> filterResults(const std::vector<RecognitionResultPtr>& results);
             PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
     };
