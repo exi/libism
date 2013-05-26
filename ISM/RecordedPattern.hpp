@@ -13,15 +13,10 @@ namespace ISM {
         public:
             std::string name;
             std::vector<ObjectSetPtr> objectSets;
-            double x, y, z;
-            MinMaxFinderPtr minMaxFinder;
 
-            RecordedPattern(std::string name): name(name), x(0), y(0), z(0) {
-                this->minMaxFinder.reset(new MinMaxFinder());
-            };
+            RecordedPattern(std::string name): name(name) { };
 
             void addObjectSet(ObjectSetPtr os);
-            PointPtr getAbsoluteReferencePoint();
     };
     typedef boost::shared_ptr<RecordedPattern> RecordedPatternPtr;
 }

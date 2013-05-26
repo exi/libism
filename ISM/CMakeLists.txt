@@ -27,7 +27,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 message(${CMAKE_VERSION})
 
 # validation
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=gnu++0x -g -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=gnu++0x -g -O2 -fopenmp")
 # GCC only sends a warning and not an error if it can't compile with stack canaries.
 set(CMAKE_REQUIRED_FLAGS "-Werror")
 

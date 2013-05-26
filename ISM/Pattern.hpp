@@ -7,9 +7,8 @@ namespace ISM {
     struct Pattern {
         std::string name;
         int expectedMaxWeight;
-        double referencePointSpread;
-        Pattern(std::string name, int expectedMaxWeight, double referencePointSpread):
-            name(name), expectedMaxWeight(expectedMaxWeight), referencePointSpread(referencePointSpread) {};
+        Pattern(std::string name, int expectedMaxWeight):
+            name(name), expectedMaxWeight(expectedMaxWeight) {};
     };
 
     typedef boost::shared_ptr<Pattern> PatternPtr;

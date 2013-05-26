@@ -8,18 +8,18 @@
 
 namespace ISM {
     struct VotingBinResult {
-        ObjectSetPtr objects;
+        ObjectSetPtr matchingObjects;
         PosePtr referencePose;
         double confidence;
         std::vector<PointPtr> idealPoints;
 
         VotingBinResult(const VotingBinResult& other): confidence(other.confidence) {
-            objects = ObjectSetPtr(new ObjectSet(*(other.objects)));
+            matchingObjects = ObjectSetPtr(new ObjectSet(*(other.matchingObjects)));
             referencePose = PosePtr(new Pose(*(other.referencePose)));
         }
 
-        VotingBinResult(ObjectSetPtr& os, PosePtr& p, double c): objects(os), referencePose(p), confidence(c) {};
-        VotingBinResult(ObjectSetPtr& os, PosePtr& p, double c, std::vector<PointPtr> i): objects(os), referencePose(p), confidence(c), idealPoints(i) {};
+        VotingBinResult(ObjectSetPtr& os, PosePtr& p, double c): matchingObjects(os), referencePose(p), confidence(c) {};
+        VotingBinResult(ObjectSetPtr& os, PosePtr& p, double c, std::vector<PointPtr> i): matchingObjects(os), referencePose(p), confidence(c), idealPoints(i) {};
     };
 
     typedef boost::shared_ptr<VotingBinResult> VotingBinResultPtr;

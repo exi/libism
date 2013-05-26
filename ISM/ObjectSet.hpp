@@ -20,8 +20,6 @@ namespace ISM {
             }
 
             void insert(ObjectPtr o);
-
-            const PointPtr getReferencePoint() const;
     };
 
     typedef boost::shared_ptr<ObjectSet> ObjectSetPtr;

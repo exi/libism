@@ -7,9 +7,10 @@
 #include "VotedPose.hpp"
 #include "ObjectSet.hpp"
 #include "VotingBin.hpp"
-#include "VotingSpaceResult.hpp"
 
 namespace ISM {
+    typedef VotingBinResult VotingSpaceResult;
+    typedef VotingBinResultPtr VotingSpaceResultPtr;
     class VotingSpace {
         double binSize;
         std::map<int , std::map<int, std::map<int, VotingBinPtr> > > voteMap;

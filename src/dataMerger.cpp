@@ -108,7 +108,7 @@ int main (int argc, char** argv) {
             cout<<"found "<<patternMap.size()<<" patterns"<<endl;
             for (auto& patternNameToPattern : patternMap) {
                 auto pattern = patternNameToPattern.second;
-                target.upsertModelPattern(pattern->name, pattern->expectedMaxWeight, pattern->referencePointSpread);
+                target.upsertModelPattern(pattern->name, pattern->expectedMaxWeight);
                 cout<<".";
                 cout.flush();
             }

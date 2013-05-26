@@ -18,7 +18,7 @@ int main (int argc, char** argv) {
         cerr<<"{ \"referencePose\": "<<json(res->referencePose)<<",";
         cerr<<"\"objects\": [";
         bool first = true;
-        for (auto& maptype : res->votedPoints) {
+        for (auto& maptype : (*res->votedPoints)) {
             if (first) {
                 first = false;
             } else {

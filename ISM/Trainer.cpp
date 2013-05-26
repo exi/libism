@@ -204,8 +204,7 @@ namespace ISM {
 
         this->tableHelper->upsertModelPattern(
             patternName,
-            floor(((float)objectsWeightSum / (float)setCount) + 0.5),
-            this->recordedPattern->minMaxFinder->getMaxSpread()
+            floor(((float)objectsWeightSum / (float)setCount) + 0.5)
         );
 
         refTrack->calculateWeight();

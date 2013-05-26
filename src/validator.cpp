@@ -12,8 +12,13 @@ namespace po = boost::program_options;
 
 bool detectGeneric = false;
 int onlyN = -1;
+int maxRuns = -1;
+int runs = 0;
 
 void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
+    if (maxRuns >= 0 && runs >= maxRuns) {
+        return;
+    }
     cout << "validate pattern " << pattern->name << endl;
     int idx = 0;
     int setCount = 0;
@@ -26,6 +31,11 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
             idx++;
             continue;
         }
+
+        if (maxRuns >= 0 && runs >= maxRuns) {
+            break;
+        }
+
         set<pair<string, string> > mappedTypes;
 
         if (detectGeneric) {
@@ -37,6 +47,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
             }
         }
         setCount++;
+        runs++;
 
         auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
@@ -59,7 +70,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
 //            cout << result << endl;
         }
         idx++;
-        if (onlyN >= 0 && onlyN - 1 == idx) {
+        if ((onlyN >= 0 && onlyN - 1 == idx)) {
             break;
         }
     }
@@ -79,12 +90,13 @@ int main(int argc, char** argv) {
 
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "produce help message")("database-file,d",
-            po::value<string>()->default_value("record.sqlite"), "database file to use")("generic-mode,g",
-            po::bool_switch(&detectGeneric),
-            "test object type inference by removing object type and id from recognition input")("sensitivity,s",
-            po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")("pattern-name,p",
-            po::value<vector<string> >(), "patters to validate instead of all")("onlyN,o",
-            po::value<int>(&onlyN)->default_value(-1), "only the n'th set");
+            po::value<string>()->default_value("record.sqlite"), "database file to use")
+            ("generic-mode,g", po::bool_switch(&detectGeneric),
+            "test object type inference by removing object type and id from recognition input")
+            ("sensitivity,s", po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")
+            ("pattern-name,p", po::value<vector<string> >(), "patters to validate instead of all")
+            ("onlyN,o", po::value<int>(&onlyN)->default_value(-1), "only the n'th set")
+            ("maxRuns,m", po::value<int>(&maxRuns)->default_value(-1), "test a maximum of m sets");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

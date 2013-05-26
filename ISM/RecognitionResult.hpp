@@ -10,19 +10,21 @@
 
 namespace ISM {
     struct RecognitionResult {
+        typedef std::map<ObjectPtr, std::vector<PointPtr>> VotedPointsType;
+        typedef boost::shared_ptr<VotedPointsType> VotedPointsTypePtr;
         std::string patternName;
         PosePtr referencePose;
         ObjectSetPtr recognizedSet;
         double confidence;
         std::vector<PointPtr> idealPoints;
-        std::map<ObjectPtr, std::vector<PointPtr>> votedPoints;
+        VotedPointsTypePtr votedPoints;
         RecognitionResult(
                 const std::string patternName,
                 const PosePtr referencePose,
                 const ObjectSetPtr recognizedSet,
                 const double confidence,
                 const std::vector<PointPtr> idealPoints,
-                const std::map<ObjectPtr, std::vector<PointPtr>> votedPoints
+                const VotedPointsTypePtr votedPoints
                 ) :
             patternName(patternName),
             referencePose(referencePose),

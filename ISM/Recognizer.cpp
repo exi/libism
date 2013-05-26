@@ -14,21 +14,21 @@ namespace ISM {
     Recognizer::Recognizer(const std::string& dbfilename, double sensitivity) :
             sensitivity(sensitivity), again(false) {
         this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
+        this->objectTypes = this->tableHelper->getObjectTypes();
+        this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
+        this->getPatternDefinitions();
     }
 
     Recognizer::Recognizer(double sensitivity, const std::string& dbfilename) :
             sensitivity(sensitivity), again(false) {
         this->tableHelper = TableHelperPtr(new TableHelper(dbfilename));
+        this->objectTypes = this->tableHelper->getObjectTypes();
+        this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
+        this->getPatternDefinitions();
     }
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
-        this->objectTypes.clear();
         this->inputSet = objectSet;
-
-        this->objectTypes = this->tableHelper->getObjectTypes();
-
-        this->objectDefinitions = this->tableHelper->getVoteSpecifiersForObjectTypes(this->objectTypes);
-        this->getPatternDefinitions();
 
 //        std::cout<<"######"<<std::endl;
         int loops = 0, maxLoops = 2;
@@ -57,7 +57,7 @@ namespace ISM {
         //vote for each pattern separately
         std::map<PatternPtr, std::vector<VotedPosePtr> > votesMap;
 
-        std::map<ObjectPtr, std::vector<PointPtr>> votedPoints;
+        RecognitionResult::VotedPointsTypePtr votedPoints(new RecognitionResult::VotedPointsType());
         for (ObjectPtr& object : this->inputSet->objects) {
             std::set<std::string> types;
             if (object->type == "") {
@@ -82,10 +82,10 @@ namespace ISM {
                                         object->weight / pattern->expectedMaxWeight));
                         votesMap[pattern].push_back(v);
 
-                        if (votedPoints.find(object) == votedPoints.end()) {
-                            votedPoints[object] = std::vector<PointPtr>();
+                        if (votedPoints->find(object) == votedPoints->end()) {
+                            (*votedPoints)[object] = std::vector<PointPtr>();
                         }
-                        votedPoints[object].push_back(pose->point);
+                        (*votedPoints)[object].push_back(pose->point);
                     }
                 }
             }
@@ -119,7 +119,7 @@ namespace ISM {
                 }
                 this->results.push_back(res);
             }
-            std::cout << "voting round for " << votePair.first->name << " added " << added <<std::endl;
+            //std::cout << "voting round for " << votePair.first->name << " added " << added <<std::endl;
         }
     }
 
@@ -151,11 +151,11 @@ namespace ISM {
     void Recognizer::getPatternDefinitions() {
         typedef std::pair<std::string, std::vector<VoteSpecifierPtr> > mapItemType;
         std::set<std::string> patternNames;
-        BOOST_FOREACH(mapItemType item, this->objectDefinitions){
-        BOOST_FOREACH(VoteSpecifierPtr vote, item.second) {
-            patternNames.insert(vote->patternName);
+        BOOST_FOREACH(mapItemType item, this->objectDefinitions) {
+            BOOST_FOREACH(VoteSpecifierPtr vote, item.second) {
+                patternNames.insert(vote->patternName);
+            }
         }
-    }
 
         this->patternDefinitions = this->tableHelper->getPatternDefinitionsByName(patternNames);
     }

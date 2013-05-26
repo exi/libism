@@ -18,7 +18,7 @@ namespace ISM {
         idIt->second.push_back(vote);
     }
 
-    std::vector<VotingBinResultPtr> VotingBin::getResults(double sensitivity) {
+    VotingBinResultPtr VotingBin::getResult(double sensitivity) {
         std::vector<VotingBinResultPtr> results;
         auto typeIt = votes.begin();
         auto typeItEnd = votes.end();
@@ -64,14 +64,13 @@ namespace ISM {
                                 std::vector<PointPtr>(this->idealPoints)
                             )
                         );
-                        results.push_back(r);
-                        return results;
+                        return r;
                     }
                 }
             }
         }
 
-        return results;
+        return VotingBinResultPtr();
     }
 
     bool VotingBin::searchFit(double sensitivity) {

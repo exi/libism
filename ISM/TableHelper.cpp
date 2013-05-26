@@ -40,7 +40,7 @@ namespace ISM {
             ", qw2 FLOAT, qx2 FLOAT, qy2 FLOAT, qz2 FLOAT"
             ", qpw FLOAT, qpx FLOAT, qpy FLOAT, qpz FLOAT"
             ", qpw2 FLOAT, qpx2 FLOAT, qpy2 FLOAT, qpz2 FLOAT";
-        tableDefs["model_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE, expectedMaxWeight INTEGER, referencePointSpread FLOAT";
+        tableDefs["model_patterns"] = "id INTEGER PRIMARY KEY, name TEXT UNIQUE, expectedMaxWeight INTEGER";
 
         typedef std::pair<std::string, std::string> pair_type;
         BOOST_FOREACH(pair_type p, tableDefs) {
@@ -256,19 +256,17 @@ namespace ISM {
         return this->getLastInsertId("model_patterns");
     }
 
-    int TableHelper::upsertModelPattern(const std::string& patternName, int expectedMaxWeight, double referencePointSpread) const {
+    int TableHelper::upsertModelPattern(const std::string& patternName, int expectedMaxWeight) const {
         int patternId = this->getModelPatternId(patternName);
         if (patternId == 0) {
-            (*sqlite) << "INSERT INTO `model_patterns` (name, expectedMaxWeight, referencePointSpread) VALUES (:patternName, :objectCount, :refPointSpread);",
+            (*sqlite) << "INSERT INTO `model_patterns` (name, expectedMaxWeight) VALUES (:patternName, :expectedMaxWeight);",
                 use(patternName),
-                use(expectedMaxWeight),
-                use(referencePointSpread);
+                use(expectedMaxWeight);
         } else {
-            (*sqlite) << "REPLACE INTO `model_patterns` (id, name, expectedMaxWeight, referencePointSpread) VALUES (:id, :patternName, :objectCount, :refPointSpread);",
+            (*sqlite) << "REPLACE INTO `model_patterns` (id, name, expectedMaxWeight) VALUES (:id, :patternName, :expectedMaxWeight);",
                 use(patternId),
                 use(patternName),
-                use(expectedMaxWeight),
-                use(referencePointSpread);
+                use(expectedMaxWeight);
         }
         return this->getLastInsertId("model_patterns");
     }
@@ -305,17 +303,14 @@ namespace ISM {
         BOOST_FOREACH(std::string patternName, patternNames) {
             int expectedMaxWeight;
             indicator indEOC;
-            double referencePointSpread;
-            indicator indRPS;
             (*sqlite) <<
-                "SELECT expectedMaxWeight, referencePointSpread "<<
+                "SELECT expectedMaxWeight "<<
                 "FROM `model_patterns` "<<
                 "WHERE name = :patternName LIMIT 1;",
                 into(expectedMaxWeight, indEOC),
-                into(referencePointSpread, indRPS),
                 use(patternName);
-            if ((*sqlite).got_data() && indEOC == i_ok && indRPS == i_ok) {
-                patterns[patternName] = PatternPtr(new Pattern(patternName, expectedMaxWeight, referencePointSpread));
+            if ((*sqlite).got_data() && indEOC == i_ok) {
+                patterns[patternName] = PatternPtr(new Pattern(patternName, expectedMaxWeight));
             }
         }
 

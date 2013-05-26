@@ -23,16 +23,9 @@ namespace ISM {
         for (auto& xitem : this->voteMap) {
             for (auto& yitem : xitem.second) {
                 for (auto& zitem : yitem.second) {
-                    std::vector<VotingBinResultPtr> vresults = zitem.second->getResults(this->binSize);
-                    for (auto& res : vresults) {
-                        if (res->confidence > 0) {
-                            VotingSpaceResultPtr vres(new VotingSpaceResult());
-                            vres->confidence = res->confidence;
-                            vres->matchingObjects = res->objects;
-                            vres->idealPoints = res->idealPoints;
-                            vres->referencePose = res->referencePose;
-                            results.push_back(vres);
-                        }
+                    VotingBinResultPtr res = zitem.second->getResult(this->binSize);
+                    if (res && res->confidence > 0) {
+                        results.push_back(res);
                     }
                 }
             }

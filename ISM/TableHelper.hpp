@@ -49,7 +49,7 @@ namespace ISM {
             /* model */
             int insertModelVoteSpecifier(const VoteSpecifierPtr& vote) const;
             int insertModelPattern(const std::string& patternName) const;
-            int upsertModelPattern(const std::string& patternName, int expectedMaxWeight, double referencePointSpread) const;
+            int upsertModelPattern(const std::string& patternName, int expectedMaxWeight) const;
             int insertModelObjectType(const std::string& objectType) const;
 
             int getModelPatternId(const std::string& patternName) const;
