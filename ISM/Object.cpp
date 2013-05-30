@@ -14,6 +14,8 @@ namespace ISM{
         strm<<"{"<<std::endl
             <<"\"type\": \""<<this->type<<"\", "<<std::endl
             <<"\"observedId\": \""<<this->observedId<<"\", "<<std::endl
+            <<"\"weight\": "<<this->weight<<","<<std::endl
+            <<"\"confidence\": "<<this->confidence<<","<<std::endl
             <<"\"pose\": "<<json(this->pose)<<std::endl
             <<"}"<<std::endl;
     }

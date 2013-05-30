@@ -11,6 +11,7 @@ namespace ISM {
             TrackPtr currentBest;
             int bestStaticBreaks = 0;
             int bestCommonPositions = 0;
+            double bestAvgDistance = 0;
 
             for (auto& second : tracks->tracks) {
                 if (first == second) {
@@ -84,15 +85,16 @@ namespace ISM {
                 if (
                     (double)staticBreaks < ((double)commonPositions) * 0.05 &&
                     commonPositions > (double)first->objects.size() * 0.5 &&
-                    (!currentBest || staticBreaks < bestStaticBreaks)
+                    (!currentBest || staticBreaks < bestStaticBreaks ||
+                            (staticBreaks == bestStaticBreaks && bestAvgDistance > averageDistance))
                 ) {
                     currentBest = second;
                     bestStaticBreaks = staticBreaks;
                     bestCommonPositions = commonPositions;
+                    bestAvgDistance = averageDistance;
                 }
             }
 
-            //exclude clusters which contain all tracks
             if (currentBest) {
                 double conf = 1 - (double)bestStaticBreaks / (double)bestCommonPositions;
                 if (conf > this->confidence) {

@@ -82,7 +82,7 @@ namespace ISM {
         HeuristicPtr bestHeuristic;
 
         std::vector<HeuristicPtr> heuristics;
-        heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
+        //heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
         heuristics.push_back(HeuristicPtr(new DirectionRelationHeuristic(tracks)));
 
         for (auto& heuristic : heuristics) {

@@ -53,7 +53,6 @@ def renderLearningData(filename):
         pv = o['pose']['poseVector']
 
         if o['type'] not in stypes:
-            print 'add type', o['type']
             stypes[o['type']] = scounter
             scounter = scounter + 1
 
@@ -90,7 +89,7 @@ class ExampleRenderer:
         self.pointsz.append(pz)
         self.pointss.append(s)
         old = self.pcounter
-        self.pcounter +=1
+        self.pcounter += 1
         return old
 
     def addArrow(self, p, pv, s):
@@ -160,12 +159,13 @@ class ExampleRenderer:
 
             ocounter += 1
 
+            print 'draw ', len(i['votes']), ' votes for ', o['type'], ':', o['observedId']
             idx = self.addPoint(p, ocounter, label=o['type'])
             self.considerPoint(p)
+            vc = 0
             for v in i['votes']:
+                vc += 1
                 self.considerPoint(v)
-                #id = self.addPoint(v, ocounter + 20)
-                #connections.append((idx, id))
                 pv = {}
                 pv['x'] = v['x'] - p['x']
                 pv['y'] = v['y'] - p['y']
@@ -182,12 +182,7 @@ class ExampleRenderer:
                 colormap='blue-red',
                 opacity=0.5,
                 scale_mode='none',
-                scale_factor=0.3)
-
-        nodes.mlab_source.dataset.lines = np.array(connections)
-        nodes.mlab_source.update()
-
-        lines = pipeline.surface(nodes, opacity=0.6)
+                scale_factor=0.2)
 
         for (p, pv, s) in self.voteArrows:
             self.addArrow(p, pv, s)
@@ -205,7 +200,7 @@ class ExampleRenderer:
         n.glyph.glyph_source.glyph_source.progress = 1.0
         n.glyph.glyph_source.glyph_source.shaft_radius = 0.002
         n.glyph.glyph_source.glyph_source.tip_length = 0.0492
-        n.glyph.glyph.range = [ 1.,  1.]
+        n.glyph.glyph.range = [ 1., 1.]
         n.glyph.glyph.color_mode = 'color_by_scalar'
         self.resetArrows()
         outline()
@@ -225,8 +220,8 @@ class ExampleRenderer:
                 scale_factor=0.03,
                 opacity=0.5)
 
-        for (px, py, pz, label) in self.texts:
-            text3d(px, py, pz, label, scale=0.2)
+#        for (px, py, pz, label) in self.texts:
+#            text3d(px, py, pz, label, scale=0.2)
 
         self.minx = np.array(self.mimax).min() * self.sf
         self.maxx = np.array(self.mimax).max() * self.sf
@@ -237,7 +232,6 @@ class ExampleRenderer:
         ex = self.maxx - self.minx
         ey = self.maxy - self.miny
         ez = self.maxz - self.minz
-        print self.minx, self.maxx, self.miny, self.maxy, self.minz, self.maxz, ex, ey, ez
 
         for i in range(0, len(self.votesx)):
             px = self.votesx[i]
@@ -245,14 +239,13 @@ class ExampleRenderer:
             rpx = round(((px - self.minx) / (ex)) * gridsize)
             rpy = round(((py - self.miny) / (ey)) * gridsize)
             contour[rpx - 1][rpy - 1] += 1
-            print px, py, rpx, rpy, ex, ey, contour[rpx - 1][rpy - 1]
 
         for x in range(0, gridsize):
             for y in range(0, gridsize):
                 contour[x][y] = math.log(contour[x][y])
 
         s = surf(contour,
-            extent=[self.minx, self.maxx, self.miny, self.maxy, self.minz - ez / 2, self.maxz - ez / 2],
+            extent=[self.minx, self.maxx, self.miny, self.maxy, self.minz - ez, self.maxz - ez],
             opacity=1,
             colormap='jet')
 
@@ -284,8 +277,10 @@ def main():
     #scene = e.new_scene()
     #renderLearningData('pattern3.json')
     scene = e.new_scene()
-    ExampleRenderer('voted.json', scene)
+    figure(bgcolor=(1,1,1))
+    ExampleRenderer('3patterns.json', scene)
     show()
+    savefig("/home/reckling/Public/scene.wrl")
     return e, ui
 
 if __name__ == '__main__':

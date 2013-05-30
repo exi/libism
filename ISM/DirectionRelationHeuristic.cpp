@@ -5,6 +5,11 @@
 #include <algorithm>
 #include "MathHelper.hpp"
 
+#define STATIC_BREAK_RATIO 0.01
+#define TOGETHER_RATIO 0.95
+#define MAX_ANGLE_DEVIATION 15
+
+
 namespace ISM {
     DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) : Heuristic("DirectionRelationHeuristic") {
         typedef MathHelper MH;
@@ -26,11 +31,12 @@ namespace ISM {
                  * What we do:
                  * Calculate a direction Vector from first to second for every Frame.
                  * Check in every frame the angle between the reference vector (first vector) and the current vector.
-                 * If the misalignment is more than 15 degrees, incease staticBreaks and recalculate the vote.
+                 * If the misalignment is more than MAX_ANGLE_DEVIATION degrees, increase staticBreaks and
+                 * recalculate the reference vote.
                  * Also calculate the average distance between first and second.
                  *
-                 * At the end, if the staticBreaks are below 1% of the sample range,
-                 * and they appear together in more than 95% of the frames,
+                 * At the end, if the staticBreaks are below STATIC_BREAK_RATIO of the sample range,
+                 * and they appear together in more than TOGETHER_RATIO of the frames,
                  * and the second is closer to first than the current closest track,
                  * replace the current closest track with second.
                  *
@@ -76,15 +82,15 @@ namespace ISM {
                     auto currentDirection = this->getDirectionVector(firstObject, secondObject);
                     auto deviation = MH::rad2deg(acos(directionVector.dot(currentDirection)));
 
-                    if (deviation > 15.0) {
+                    if (deviation > MAX_ANGLE_DEVIATION) {
                         staticBreaks++;
                         directionVector = currentDirection;
                     }
                 }
 
                 if (
-                    (double)staticBreaks < ((double)commonPositions) * 0.01 &&
-                    commonPositions > (double)first->objects.size() * 0.5 &&
+                    (double)staticBreaks < ((double)commonPositions) * STATIC_BREAK_RATIO &&
+                    commonPositions > (double)first->objects.size() * TOGETHER_RATIO &&
                     (!currentBest || currentClosestDistance > averageDistance)
                 ) {
                     currentBest = second;

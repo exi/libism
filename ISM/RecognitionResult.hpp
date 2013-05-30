@@ -9,15 +9,20 @@
 #include "Pose.hpp"
 
 namespace ISM {
+    typedef std::map<ObjectPtr, std::vector<PointPtr>> VotedPointsType;
+    typedef boost::shared_ptr<VotedPointsType> VotedPointsTypePtr;
+    struct RecognitionResult;
+
+    typedef boost::shared_ptr<RecognitionResult> RecognitionResultPtr;
+
     struct RecognitionResult {
-        typedef std::map<ObjectPtr, std::vector<PointPtr>> VotedPointsType;
-        typedef boost::shared_ptr<VotedPointsType> VotedPointsTypePtr;
         std::string patternName;
         PosePtr referencePose;
         ObjectSetPtr recognizedSet;
         double confidence;
         std::vector<PointPtr> idealPoints;
         VotedPointsTypePtr votedPoints;
+        std::vector<RecognitionResultPtr> subPatterns;
         RecognitionResult(
                 const std::string patternName,
                 const PosePtr referencePose,
@@ -33,8 +38,6 @@ namespace ISM {
             idealPoints(idealPoints),
             votedPoints(votedPoints) {};
     };
-
-    typedef boost::shared_ptr<RecognitionResult> RecognitionResultPtr;
 
     std::ostream& operator<<(std::ostream &strm, const ISM::RecognitionResult &o);
     std::ostream& operator<<(std::ostream &strm, const ISM::RecognitionResultPtr &o);

@@ -4,6 +4,7 @@
 #include <boost/program_options.hpp>
 #include <string>
 #include <set>
+#include <stack>
 #include <utility>
 
 using namespace ISM;
@@ -51,18 +52,36 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
 
         auto results = recognizer->recognizePattern(os);
         for (auto& result : results) {
-            if (result->patternName.find(pattern->name) != string::npos) {
-                if (result->confidence > thresholdConfidence) {
-                    for (auto& obj : result->recognizedSet->objects) {
-                        auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
-                        if (match != mappedTypes.end()) {
-                            mappedTypes.erase(match);
-                            identifySum++;
+            if (result->patternName == pattern->name) {
+                if (result->patternName == pattern->name) {
+                    std::vector<RecognitionResultPtr> all;
+                    all.push_back(result);
+                    std::stack<RecognitionResultPtr> subPatterns;
+
+                    for (auto& subPattern : result->subPatterns) {
+                        subPatterns.push(subPattern);
+                    }
+
+                    while (subPatterns.size() > 0) {
+                        auto sp = subPatterns.top();
+                        subPatterns.pop();
+                        all.push_back(sp);
+                        for (auto& subPattern : sp->subPatterns) {
+                            subPatterns.push(subPattern);
                         }
                     }
-                }
-                if (result->patternName == pattern->name) {
-                    cout << (result->confidence > thresholdConfidence ? "." : ",");
+
+                    for (auto& pattern : all) {
+                        for (auto& obj : pattern->recognizedSet->objects) {
+                            auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
+                            if (match != mappedTypes.end()) {
+                                mappedTypes.erase(match);
+                                identifySum++;
+                            }
+                        }
+                    }
+
+                    cout << (result->confidence >= thresholdConfidence ? "." : ",");
                     cout.flush();
                     confidenceSum += result->confidence;
                 }
@@ -90,13 +109,13 @@ int main(int argc, char** argv) {
 
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "produce help message")("database-file,d",
-            po::value<string>()->default_value("record.sqlite"), "database file to use")
-            ("generic-mode,g", po::bool_switch(&detectGeneric),
-            "test object type inference by removing object type and id from recognition input")
-            ("sensitivity,s", po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")
-            ("pattern-name,p", po::value<vector<string> >(), "patters to validate instead of all")
-            ("onlyN,o", po::value<int>(&onlyN)->default_value(-1), "only the n'th set")
-            ("maxRuns,m", po::value<int>(&maxRuns)->default_value(-1), "test a maximum of m sets");
+            po::value<string>()->default_value("record.sqlite"), "database file to use")("generic-mode,g",
+            po::bool_switch(&detectGeneric),
+            "test object type inference by removing object type and id from recognition input")("sensitivity,s",
+            po::value<double>(&sensitivity)->default_value(0.0001), "recognizer sensitivity")("pattern-name,p",
+            po::value<vector<string> >(), "patters to validate instead of all")("onlyN,o",
+            po::value<int>(&onlyN)->default_value(-1), "only the n'th set")("maxRuns,m",
+            po::value<int>(&maxRuns)->default_value(-1), "test a maximum of m sets");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

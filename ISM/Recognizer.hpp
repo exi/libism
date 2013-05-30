@@ -30,9 +30,14 @@ namespace ISM {
         private:
             void calculateVotes();
             void getPatternDefinitions();
-            bool objectAlreadyInSet(const ObjectPtr& o);
+            int objectAlreadyInSet(const ObjectPtr& o);
+            static bool poseEqual(const PosePtr& p1, const PosePtr& p2);
             std::vector<RecognitionResultPtr> filterResults(const std::vector<RecognitionResultPtr>& results);
             PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
+            static std::vector<RecognitionResultPtr> getSubPatternsForResult(
+                    RecognitionResultPtr result,
+                    std::map<std::string, std::vector<RecognitionResultPtr> > patternNameToResults
+            );
     };
     typedef boost::shared_ptr<Recognizer> RecognizerPtr;
 }
