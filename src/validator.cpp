@@ -84,6 +84,7 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
                     cout << (result->confidence >= thresholdConfidence ? "." : ",");
                     cout.flush();
                     confidenceSum += result->confidence;
+                    break;
                 }
             }
 //            cout << result << endl;
