@@ -51,44 +51,43 @@ void validatePattern(RecordedPatternPtr pattern, RecognizerPtr recognizer) {
         runs++;
 
         auto results = recognizer->recognizePattern(os);
+        bool found = false;
         for (auto& result : results) {
             if (result->patternName == pattern->name) {
-                if (result->patternName == pattern->name) {
-                    std::vector<RecognitionResultPtr> all;
-                    all.push_back(result);
-                    std::stack<RecognitionResultPtr> subPatterns;
+                vector<RecognitionResultPtr> all;
+                all.push_back(result);
+                stack<RecognitionResultPtr> subPatterns;
 
-                    for (auto& subPattern : result->subPatterns) {
+                for (auto& subPattern : result->subPatterns) {
+                    subPatterns.push(subPattern);
+                }
+
+                while (subPatterns.size() > 0) {
+                    auto sp = subPatterns.top();
+                    subPatterns.pop();
+                    all.push_back(sp);
+                    for (auto& subPattern : sp->subPatterns) {
                         subPatterns.push(subPattern);
                     }
-
-                    while (subPatterns.size() > 0) {
-                        auto sp = subPatterns.top();
-                        subPatterns.pop();
-                        all.push_back(sp);
-                        for (auto& subPattern : sp->subPatterns) {
-                            subPatterns.push(subPattern);
-                        }
-                    }
-
-                    for (auto& pattern : all) {
-                        for (auto& obj : pattern->recognizedSet->objects) {
-                            auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
-                            if (match != mappedTypes.end()) {
-                                mappedTypes.erase(match);
-                                identifySum++;
-                            }
-                        }
-                    }
-
-                    cout << (result->confidence >= thresholdConfidence ? "." : ",");
-                    cout.flush();
-                    confidenceSum += result->confidence;
-                    break;
                 }
+
+                for (auto& pattern : all) {
+                    for (auto& obj : pattern->recognizedSet->objects) {
+                        auto match = mappedTypes.find(make_pair(obj->type, obj->observedId));
+                        if (match != mappedTypes.end()) {
+                            mappedTypes.erase(match);
+                            identifySum++;
+                        }
+                    }
+                }
+
+                found = true;
+                confidenceSum += result->confidence;
+                break;
             }
-//            cout << result << endl;
         }
+        cout << (found ? "." : ",");
+        cout.flush();
         idx++;
         if ((onlyN >= 0 && onlyN - 1 == idx)) {
             break;

@@ -9,9 +9,12 @@
 #include "MathHelper.hpp"
 
 namespace ISM {
-    std::vector<VotingSpaceResultPtr> VotingSpace::vote(const std::vector<VotedPosePtr>& votes) {
+    std::vector<VotingSpaceResultPtr> VotingSpace::vote(std::vector<VotedPosePtr>& votes) {
         this->voteMap.clear();
 
+        std::sort(votes.begin(), votes.end(), [](const VotedPosePtr& o1, const VotedPosePtr& o2) {
+            return o1->confidence > o2->confidence;
+        });
         for (const VotedPosePtr& vote : votes) {
             PointPtr point = vote->pose->point;
             VotingBinPtr bin = this->getBin(point->x, point->y, point->z);
@@ -35,9 +38,9 @@ namespace ISM {
     }
 
     VotingBinPtr VotingSpace::getBin(double x, double y, double z) {
-        int binx = (int)(x / this->binSize);
-        int biny = (int)(y / this->binSize);
-        int binz = (int)(z / this->binSize);
+        int binx = (int) (x / this->binSize);
+        int biny = (int) (y / this->binSize);
+        int binz = (int) (z / this->binSize);
 
         if (this->voteMap.find(binx) == this->voteMap.end()) {
             this->voteMap.insert(std::make_pair(binx, std::map<int, std::map<int, VotingBinPtr> >()));

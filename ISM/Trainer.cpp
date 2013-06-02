@@ -14,6 +14,7 @@
 #include "Tracks.hpp"
 #include "StaticRelationHeuristic.hpp"
 #include "DirectionRelationHeuristic.hpp"
+#include "DataCollector.hpp"
 
 namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
@@ -71,11 +72,13 @@ namespace ISM {
 
             auto refTrack = this->doTraining(cluster->toObjectSetVector(), subPatternName);
             clusterId++;
+            DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(cluster, refTrack));
             tracks->replace(cluster->tracks, refTrack);
         }
 
         //train remaining sets
-        this->doTraining(tracks->toObjectSetVector(), this->recordedPattern->name);
+        auto refTrack = this->doTraining(tracks->toObjectSetVector(), this->recordedPattern->name);
+        DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(tracks, refTrack));
     }
 
     HeuristicPtr Trainer::findHeuristicMatch(const TracksPtr& tracks) {
@@ -113,23 +116,31 @@ namespace ISM {
 
         {
             double bestViewRatio = 0;
+            double bestMovement = 0;
             for (auto& track : tracks->tracks) {
                 int views = 0;
                 std::string refT;
                 std::string refI;
+                ObjectPtr lastObj;
+                double movement = 0;
                 for (auto& obj : track->objects) {
                     if (obj) {
                         refT = obj->type;
                         refI = obj->observedId;
                         views++;
+                        if (lastObj) {
+                            movement += MathHelper::getDistanceBetweenPoints(obj->pose->point, lastObj->pose->point);
+                        }
+                        lastObj = obj;
                     }
                 }
 
                 double ratio = (double)views / (double)track->objects.size();
-                if (ratio > bestViewRatio) {
+                if (ratio > bestViewRatio || (ratio == bestViewRatio && movement < bestMovement)) {
                     refType = refT;
                     refId = refI;
                     bestViewRatio = ratio;
+                    bestMovement = movement;
                 }
             }
         }

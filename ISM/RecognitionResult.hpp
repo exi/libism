@@ -9,7 +9,7 @@
 #include "Pose.hpp"
 
 namespace ISM {
-    typedef std::map<ObjectPtr, std::vector<PointPtr>> VotedPointsType;
+    typedef std::map<ObjectPtr, std::vector<std::pair<PointPtr, double> > > VotedPointsType;
     typedef boost::shared_ptr<VotedPointsType> VotedPointsTypePtr;
     struct RecognitionResult;
 

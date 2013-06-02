@@ -11,7 +11,7 @@ namespace ISM {
             for (auto& subPattern : r.subPatterns) {
                 strm << subPattern;
                 if (c < s) {
-                    strm << ";";
+                    strm << ",";
                 }
                 strm<<"\n";
                 c++;

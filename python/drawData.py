@@ -115,11 +115,12 @@ class ExampleRenderer:
         self.mimay.append(p['y'])
         self.mimaz.append(p['z'])
 
-    def voteTo(self, p):
+    def voteTo(self, p, c):
         px = p['x'] * self.sf
         py = p['y'] * self.sf
         self.votesx.append(px)
         self.votesy.append(py)
+        self.votesc.append(c)
 
     def __init__(self, filename, scene):
         f = open(filename, 'r')
@@ -139,7 +140,7 @@ class ExampleRenderer:
         self.pointss = []
         self.votesx = []
         self.votesy = []
-        self.votesz = []
+        self.votesc = []
         self.poseArrows = []
         self.voteArrows = []
         self.resetArrows()
@@ -159,18 +160,16 @@ class ExampleRenderer:
 
             ocounter += 1
 
-            print 'draw ', len(i['votes']), ' votes for ', o['type'], ':', o['observedId']
             idx = self.addPoint(p, ocounter, label=o['type'])
             self.considerPoint(p)
-            vc = 0
-            for v in i['votes']:
-                vc += 1
-                self.considerPoint(v)
+            for pointAndConf in i['votes']:
+                v = pointAndConf['point']
+                self.considerPoint(p)
                 pv = {}
                 pv['x'] = v['x'] - p['x']
                 pv['y'] = v['y'] - p['y']
                 pv['z'] = v['z'] - p['z']
-                self.voteTo(v)
+                self.voteTo(v, pointAndConf['confidence'])
                 self.voteArrows.append((p, pv, ocounter))
 
         nodes = points3d(
@@ -238,7 +237,7 @@ class ExampleRenderer:
             py = self.votesy[i]
             rpx = round(((px - self.minx) / (ex)) * gridsize)
             rpy = round(((py - self.miny) / (ey)) * gridsize)
-            contour[rpx - 1][rpy - 1] += 1
+            contour[rpx - 1][rpy - 1] += self.votesc[i]
 
         for x in range(0, gridsize):
             for y in range(0, gridsize):
@@ -278,9 +277,8 @@ def main():
     #renderLearningData('pattern3.json')
     scene = e.new_scene()
     figure(bgcolor=(1,1,1))
-    ExampleRenderer('3patterns.json', scene)
+    ExampleRenderer('paper.json', scene)
     show()
-    savefig("/home/reckling/Public/scene.wrl")
     return e, ui
 
 if __name__ == '__main__':

@@ -6,12 +6,12 @@
 #include "MathHelper.hpp"
 
 #define STATIC_BREAK_RATIO 0.01
-#define TOGETHER_RATIO 0.95
-#define MAX_ANGLE_DEVIATION 15
-
+#define TOGETHER_RATIO 0.90
+#define MAX_ANGLE_DEVIATION 120
 
 namespace ISM {
-    DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) : Heuristic("DirectionRelationHeuristic") {
+    DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) :
+            Heuristic("DirectionRelationHeuristic") {
         typedef MathHelper MH;
         typedef Eigen::Vector3d Vector;
 
@@ -55,14 +55,12 @@ namespace ISM {
                         continue;
                     }
 
-                    averageDistance += MH::getDistanceBetweenPoints(
-                        firstObject->pose->point,
-                        secondObject->pose->point
-                    );
+                    averageDistance += MH::getDistanceBetweenPoints(firstObject->pose->point,
+                            secondObject->pose->point);
                     commonPositions++;
                 }
 
-                averageDistance /= (double)commonPositions;
+                averageDistance /= (double) commonPositions;
 
                 int staticBreaks = 0;
                 Vector directionVector;
@@ -88,11 +86,9 @@ namespace ISM {
                     }
                 }
 
-                if (
-                    (double)staticBreaks < ((double)commonPositions) * STATIC_BREAK_RATIO &&
-                    commonPositions > (double)first->objects.size() * TOGETHER_RATIO &&
-                    (!currentBest || currentClosestDistance > averageDistance)
-                ) {
+                if ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO
+                        && commonPositions > (double) first->objects.size() * TOGETHER_RATIO
+                        && (!currentBest || currentClosestDistance > averageDistance)) {
                     currentBest = second;
                     currentClosestDistance = averageDistance;
                     currentBestBreaks = staticBreaks;
@@ -101,8 +97,10 @@ namespace ISM {
             }
 
             if (currentBest) {
-                double conf = 1 - (double)currentBestBreaks / (double)currentBestCommonPositions;
-                if (!this->cluster || bestDistance > currentClosestDistance) {
+                double conf = 1 - (double) currentBestBreaks / (double) currentBestCommonPositions;
+                if (!this->cluster
+                        || (conf > this->confidence
+                                || (conf == this->confidence && bestDistance > currentClosestDistance))) {
                     std::vector<TrackPtr> cluster;
                     cluster.push_back(first);
                     cluster.push_back(currentBest);

@@ -37,11 +37,8 @@ namespace ISM {
                     this->takenSources.clear();
                     this->takenSources.insert((*voteIt)->source);
                     this->idealPoints.clear();
-                    PointPtr projectedPoint = MathHelper::getOriginPoint(
-                        this->fittingPose,
-                        (*voteIt)->vote->refToObjectQuat,
-                        (*voteIt)->vote->radius
-                    );
+                    PointPtr projectedPoint = MathHelper::getOriginPoint(this->fittingPose,
+                            (*voteIt)->vote->refToObjectQuat, (*voteIt)->vote->radius);
                     this->idealPoints.push_back(projectedPoint);
                     if (searchFit(sensitivity)) {
                         double confidence = 0;
@@ -57,13 +54,8 @@ namespace ISM {
                         }
 
                         VotingBinResultPtr r(
-                            new VotingBinResult(
-                                os,
-                                this->fittingPose,
-                                confidence,
-                                std::vector<PointPtr>(this->idealPoints)
-                            )
-                        );
+                                new VotingBinResult(os, this->fittingPose, confidence,
+                                        std::vector<PointPtr>(this->idealPoints)));
                         return r;
                     }
                 }
@@ -96,11 +88,8 @@ namespace ISM {
                         continue;
                     }
 
-                    PointPtr projectedPoint = MathHelper::getOriginPoint(
-                        fittingPose,
-                        vote->vote->refToObjectQuat,
-                        vote->vote->radius
-                    );
+                    PointPtr projectedPoint = MathHelper::getOriginPoint(fittingPose, vote->vote->refToObjectQuat,
+                            vote->vote->radius);
 
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
@@ -113,7 +102,7 @@ namespace ISM {
                     }
                 }
 
-                if (!found){
+                if (!found) {
                     return false;
                 }
             }

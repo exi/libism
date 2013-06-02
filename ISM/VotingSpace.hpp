@@ -17,7 +17,7 @@ namespace ISM {
         public:
             VotingSpace(double binSize = 1.0) : binSize(binSize) { };
 
-            std::vector<VotingSpaceResultPtr> vote(const std::vector<VotedPosePtr>& votes);
+            std::vector<VotingSpaceResultPtr> vote(std::vector<VotedPosePtr>& votes);
         private:
             VotingBinPtr getBin(double x, double y, double z);
     };

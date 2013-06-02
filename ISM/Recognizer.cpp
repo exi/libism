@@ -27,7 +27,8 @@ namespace ISM {
         this->getPatternDefinitions();
     }
 
-    const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet) {
+    const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet,
+            const double filterThreshold) {
         this->inputSet = objectSet;
 
         int loops = 0, maxLoops = 10;
@@ -38,7 +39,7 @@ namespace ISM {
             loops++;
 
         } while (this->again && loops <= maxLoops);
-        return this->filterResults(this->results);
+        return this->filterResults(this->results, filterThreshold);
     }
 
     void Recognizer::calculateVotes() {
@@ -69,9 +70,9 @@ namespace ISM {
                         votesMap[pattern].push_back(v);
 
                         if (votedPoints->find(object) == votedPoints->end()) {
-                            (*votedPoints)[object] = std::vector<PointPtr>();
+                            (*votedPoints)[object] = std::vector<std::pair<PointPtr, double> >();
                         }
-                        (*votedPoints)[object].push_back(pose->point);
+                        (*votedPoints)[object].push_back(std::make_pair(pose->point, v->confidence));
                         voteCount++;
                     }
                 }
@@ -82,7 +83,6 @@ namespace ISM {
 
         for (auto& votePair : votesMap) {
             auto vsresults = vs.vote(votePair.second);
-            int added = 0;
             for (auto& vsres : vsresults) {
                 RecognitionResultPtr res(
                         new RecognitionResult(votePair.first->name, vsres->referencePose, vsres->matchingObjects,
@@ -106,7 +106,6 @@ namespace ISM {
                         }
                     }
                     if (inSetIdx < 0) {
-                        added++;
                         this->inputSet->insert(refObj);
 
                         this->again = true;
@@ -152,7 +151,8 @@ namespace ISM {
         this->patternDefinitions = this->tableHelper->getPatternDefinitionsByName(patternNames);
     }
 
-    std::vector<RecognitionResultPtr> Recognizer::filterResults(const std::vector<RecognitionResultPtr>& results) {
+    std::vector<RecognitionResultPtr> Recognizer::filterResults(const std::vector<RecognitionResultPtr>& results,
+            const double filterThreshold) {
         std::map<std::string, std::vector<RecognitionResultPtr> > patternNameToResults;
         std::vector<RecognitionResultPtr> topLevelResults;
         for (auto& res : results) {
@@ -188,7 +188,7 @@ namespace ISM {
                 return o1->confidence > o2->confidence;
             });
             for (size_t i = 0; i < rlist.size(); i++) {
-                if (i == 0 || rlist[i]->confidence >= 0.5) {
+                if (rlist[i]->confidence >= filterThreshold) {
                     auto r = rlist[i];
                     ret.push_back(r);
                     r->subPatterns = Recognizer::getSubPatternsForResult(r, patternNameToResults);

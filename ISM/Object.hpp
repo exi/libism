@@ -8,6 +8,12 @@
 #include "Serializable.hpp"
 
 namespace ISM {
+    class Object;
+
+    typedef boost::shared_ptr<Object> ObjectPtr;
+
+    std::ostream& operator<<(std::ostream &strm, const ISM::Object &o);
+    std::ostream& operator<<(std::ostream &strm, const ISM::ObjectPtr &o);
     class Object: public Serializable {
         public:
             std::string type;
@@ -32,9 +38,4 @@ namespace ISM {
 
             void serialize(std::ostream& strm) const;
     };
-
-    typedef boost::shared_ptr<Object> ObjectPtr;
-
-    std::ostream& operator<<(std::ostream &strm, const ISM::Object &o);
-    std::ostream& operator<<(std::ostream &strm, const ISM::ObjectPtr &o);
 }
