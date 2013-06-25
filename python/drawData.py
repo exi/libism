@@ -164,7 +164,7 @@ class ExampleRenderer:
             self.considerPoint(p)
             for pointAndConf in i['votes']:
                 v = pointAndConf['point']
-                self.considerPoint(p)
+                self.considerPoint(v)
                 pv = {}
                 pv['x'] = v['x'] - p['x']
                 pv['y'] = v['y'] - p['y']
@@ -195,14 +195,14 @@ class ExampleRenderer:
                 scale_factor=1,
                 opacity=0.5)
         n.glyph.glyph_source.glyph_source = n.glyph.glyph_source.glyph_dict['arrow_source']
-        n.glyph.glyph_source.glyph_source.tip_radius = 0.01
+        n.glyph.glyph_source.glyph_source.tip_radius = 0.02
         n.glyph.glyph_source.glyph_source.progress = 1.0
-        n.glyph.glyph_source.glyph_source.shaft_radius = 0.002
-        n.glyph.glyph_source.glyph_source.tip_length = 0.0492
+        n.glyph.glyph_source.glyph_source.shaft_radius = 0.007
+        n.glyph.glyph_source.glyph_source.tip_length = 0.08
         n.glyph.glyph.range = [ 1., 1.]
         n.glyph.glyph.color_mode = 'color_by_scalar'
         self.resetArrows()
-        outline()
+#        outline()
 
         for (p, pv, s) in self.poseArrows:
             self.addArrow(p, pv, s)
@@ -241,19 +241,28 @@ class ExampleRenderer:
 
         for x in range(0, gridsize):
             for y in range(0, gridsize):
-                contour[x][y] = math.log(contour[x][y])
+#                contour[x][y] = math.log(contour[x][y])
+                contour[x][y] = contour[x][y]
 
         s = surf(contour,
             extent=[self.minx, self.maxx, self.miny, self.maxy, self.minz - ez, self.maxz - ez],
             opacity=1,
-            colormap='jet')
+            colormap='blue-red')
+        manager = s.module_manager.scalar_lut_manager
+        manager.show_scalar_bar = True
+        manager.number_of_labels = 0
+        manager.scalar_bar_representation.minimum_size = [1, 1]
+        manager.scalar_bar_representation.position2 = [ 0.0747619,  0.8      ]
+        manager.scalar_bar_representation.position = [ 0.89518797,  0.1       ]
+        manager.scalar_bar_representation.maximum_size = [100000, 100000]
 
-        scene.scene.camera.position = [-5.7103637050230756, -10.888659180922089, 24.539917749501686]
-        scene.scene.camera.focal_point = [6.5652658044879457, -0.91543314381867202, 17.35787000664325]
+        scene.scene.camera.position = [12.269466054776457, -6.9524818745360291, 19.312447521854764]
+        scene.scene.camera.focal_point = [10.344133046304393, -2.8901853112067575, 10.598441230292275]
         scene.scene.camera.view_angle = 30.0
-        scene.scene.camera.view_up = [0.35218711444961392, 0.22137596584026409, 0.90937171616668644]
-        scene.scene.camera.clipping_range = [8.746184970243073, 29.223277267993776]
+        scene.scene.camera.view_up = [0.21198100638291162, 0.9028543656133321, 0.37405620891229152]
+        scene.scene.camera.clipping_range = [4.2158232147785633, 16.123247828476799]
         scene.scene.camera.compute_view_plane_normal()
+        scene.scene.background = (1, 1, 1)
         scene.scene.render()
 
 
@@ -273,11 +282,11 @@ def main():
     #renderLearningData('pattern.json')
     #scene = e.new_scene()
     #renderLearningData('pattern2.json')
-    #scene = e.new_scene()
     #renderLearningData('pattern3.json')
     scene = e.new_scene()
-    figure(bgcolor=(1,1,1))
-    ExampleRenderer('paper.json', scene)
+    ExampleRenderer('cluster.json', scene)
+    scene = e.new_scene()
+    ExampleRenderer('nocluster.json', scene)
     show()
     return e, ui
 

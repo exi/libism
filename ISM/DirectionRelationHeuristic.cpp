@@ -7,7 +7,7 @@
 
 #define STATIC_BREAK_RATIO 0.01
 #define TOGETHER_RATIO 0.90
-#define MAX_ANGLE_DEVIATION 120
+#define MAX_ANGLE_DEVIATION 45
 
 namespace ISM {
     DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) :

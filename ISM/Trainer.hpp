@@ -17,12 +17,14 @@ namespace ISM {
         PointPtr absoluteReferencePoint;
         std::stringstream json;
         int skips;
+        bool useClustering;
         public:
             Trainer(std::string dbfilename = "record.sqlite");
 
             void trainPattern();
             void trainPattern(const std::string& patternName);
             void setSkipsPerCycle(const int skips);
+            void setUseClustering(const bool useClustering);
             std::string getJsonRepresentation(const std::string& patternName);
 
         private:

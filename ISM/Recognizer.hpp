@@ -6,6 +6,7 @@
 #include "ObjectSet.hpp"
 #include "TableHelper.hpp"
 #include "RecognitionResult.hpp"
+#include "VotedPose.hpp"
 
 namespace ISM {
     class Recognizer {
@@ -21,12 +22,13 @@ namespace ISM {
             PosePtr referencePose;
 
             std::vector<RecognitionResultPtr> results;
+            std::map<ObjectPtr, std::vector<VotedPosePtr> > votingCache;
 
         public:
             Recognizer(const std::string& dbfilename = "record.sqlite", double sensitivity = 5);
             Recognizer(double sensitivity = 5, const std::string& dbfilename = "record.sqlite");
             const std::vector<RecognitionResultPtr> recognizePattern(const ObjectSetPtr& objectSet,
-                    const double filterThreshold = 0.0);
+                    const double filterThreshold = 0.0, const int resultsPerPattern = -1);
 
         private:
             void calculateVotes();
@@ -34,7 +36,7 @@ namespace ISM {
             int objectAlreadyInSet(const ObjectPtr& o);
             static bool poseEqual(const PosePtr& p1, const PosePtr& p2);
             static std::vector<RecognitionResultPtr> filterResults(const std::vector<RecognitionResultPtr>& results,
-                    const double filterThreshold);
+                    const double filterThreshold, const int resultsPerPattern);
             PosePtr calculatePoseFromVote(const PosePtr& pose, const VoteSpecifierPtr& vote) const;
             static std::vector<RecognitionResultPtr> getSubPatternsForResult(RecognitionResultPtr result,
                     std::map<std::string, std::vector<RecognitionResultPtr> > patternNameToResults);

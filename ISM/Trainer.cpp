@@ -20,15 +20,20 @@ namespace ISM {
     Trainer::Trainer(std::string dbfilename) {
         this->tableHelper.reset(new TableHelper(dbfilename));
         this->skips = 0;
+        this->useClustering = true;
     }
 
     void Trainer::setSkipsPerCycle(int skips) {
         this->skips = skips;
     }
 
+    void Trainer::setUseClustering(bool useClustering) {
+        this->useClustering = useClustering;
+    }
+
     void Trainer::trainPattern() {
         std::vector<std::string> patternNames = this->tableHelper->getRecordedPatternNames();
-        std::cout<<"found "<<patternNames.size()<<" patterns"<<std::endl;
+        std::cerr<<"found "<<patternNames.size()<<" patterns"<<std::endl;
         for (auto& name : patternNames) {
             this->trainPattern(name);
         }
@@ -37,9 +42,9 @@ namespace ISM {
     void Trainer::trainPattern(const std::string& patternName) {
         boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
         if (!r) {
-            std::cout<<"no pattern records found for pattern "<<patternName<<std::endl;
+            std::cerr<<"no pattern records found for pattern "<<patternName<<std::endl;
         } else {
-            std::cout<<"training "<<patternName<<std::endl;
+            std::cerr<<"training "<<patternName<<std::endl;
             this->recordedPattern = r;
             this->learn(false);
         }
@@ -59,7 +64,7 @@ namespace ISM {
         int clusterId = 0;
         TracksPtr tracks(new Tracks(sets));
 
-        while (true) {
+        while (this->useClustering) {
             auto heuristic = this->findHeuristicMatch(tracks);
             if (!heuristic || (int) tracks->tracks.size() <= 2) {
                 break;
@@ -72,13 +77,17 @@ namespace ISM {
 
             auto refTrack = this->doTraining(cluster->toObjectSetVector(), subPatternName);
             clusterId++;
-            DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(cluster, refTrack));
+            if (DataCollector::shouldCollect()) {
+                DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(cluster, refTrack));
+            }
             tracks->replace(cluster->tracks, refTrack);
         }
 
         //train remaining sets
         auto refTrack = this->doTraining(tracks->toObjectSetVector(), this->recordedPattern->name);
-        DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(tracks, refTrack));
+        if (DataCollector::shouldCollect()) {
+            DataCollector::getData()->tracksWithRef.push_back(TracksWithRef(tracks, refTrack));
+        }
     }
 
     HeuristicPtr Trainer::findHeuristicMatch(const TracksPtr& tracks) {
@@ -92,8 +101,8 @@ namespace ISM {
             if (!heuristic->cluster) {
                 continue;
             }
-            std::cout<<"heuristic results of "<<heuristic->name<<std::endl;
-            std::cout<<heuristic->cluster->tracks.size()<<" tracks, confidence: "<<heuristic->confidence<<std::endl;
+            std::cerr<<"heuristic results of "<<heuristic->name<<std::endl;
+            std::cerr<<heuristic->cluster->tracks.size()<<" tracks, confidence: "<<heuristic->confidence<<std::endl;
             if (heuristic->confidence > 0.7 && (!bestHeuristic || heuristic->confidence > bestHeuristic->confidence)) {
                 bestHeuristic = heuristic;
             }
@@ -145,18 +154,18 @@ namespace ISM {
             }
         }
 
-        std::cout<<"choose ref "<<refType<<" : "<<refId<<std::endl;
-        std::cout<<"training "<<patternName<<" "<<std::endl;
+        std::cerr<<"choose ref "<<refType<<" : "<<refId<<std::endl;
+        std::cerr<<"training "<<patternName<<" "<<std::endl;
 
         for (ObjectSetPtr& os : sets) {
             double setWeightSum = 0;
             if (toSkip == 0) {
                 toSkip = this->skips;
-                std::cout<<".";
-                std::cout.flush();
+                std::cerr<<".";
+                std::cerr.flush();
             } else {
-                std::cout<<"_";
-                std::cout.flush();
+                std::cerr<<"_";
+                std::cerr.flush();
                 toSkip--;
                 continue;
             }
@@ -187,11 +196,11 @@ namespace ISM {
                 //auto rpoint = MH::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
                 //auto rpose = MH::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
                 //auto bpoint = MH::applyQuatAndRadiusToPose(rpose, vote->refToObjectQuat, vote->radius);
-                //std::cout<<"projected pose:"<<MH::vectorToPoint(MH::getPoseVectorFromQuat(rpose->quat))<<std::endl;
-                //std::cout<<"projected pose errors:"<<
+                //std::cerr<<"projected pose:"<<MH::vectorToPoint(MH::getPoseVectorFromQuat(rpose->quat))<<std::endl;
+                //std::cerr<<"projected pose errors:"<<
                     //(MH::getPoseVectorFromQuat(rpose->quat) - MH::getPoseVectorFromQuat(referencePose->quat)).norm()
                     //<<","<<MH::getDistanceBetweenPoints(referencePose->point, rpose->point)<<std::endl;
-                //std::cout<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
+                //std::cerr<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
             }
 
             for (auto& obj : objects) {
@@ -220,7 +229,7 @@ namespace ISM {
 
         refTrack->calculateWeight();
 
-        std::cout<<"done ("<<refTrack->weight<<")"<<std::endl;
+        std::cerr<<"done ("<<refTrack->weight<<")"<<std::endl;
 
         return refTrack;
     }

@@ -28,8 +28,9 @@ namespace ISM {
     }
 
     const std::vector<RecognitionResultPtr> Recognizer::recognizePattern(const ObjectSetPtr& objectSet,
-            const double filterThreshold) {
+            const double filterThreshold, const int resultsPerPattern) {
         this->inputSet = objectSet;
+        this->votingCache.clear();
 
         int loops = 0, maxLoops = 10;
         do {
@@ -39,15 +40,28 @@ namespace ISM {
             loops++;
 
         } while (this->again && loops <= maxLoops);
-        return this->filterResults(this->results, filterThreshold);
+        return this->filterResults(this->results, filterThreshold, resultsPerPattern);
     }
 
     void Recognizer::calculateVotes() {
-        std::map<PatternPtr, std::vector<VotedPosePtr> > votesMap;
+        std::map<std::string, std::vector<VotedPosePtr> > votesMap;
 
         VotedPointsTypePtr votedPoints(new VotedPointsType());
         int voteCount = 0;
         for (ObjectPtr& object : this->inputSet->objects) {
+            auto cacheIt = votingCache.find(object);
+            if (cacheIt != votingCache.end()) {
+                auto votedPoses = (*cacheIt).second;
+                for (auto& v : votedPoses) {
+                    auto patternName = v->vote->patternName;
+                    auto vmit = votesMap.find(patternName);
+                    if (vmit == votesMap.end()) {
+                        vmit = votesMap.insert(std::make_pair(patternName, std::vector<VotedPosePtr>())).first;
+                    }
+                    (*vmit).second.push_back(v);
+                }
+                continue;
+            }
             std::set<std::string> types;
             if (object->type == "") {
                 types = this->objectTypes;
@@ -62,13 +76,19 @@ namespace ISM {
                         PatternPtr pattern = this->patternDefinitions[vote->patternName];
                         PosePtr pose = this->calculatePoseFromVote(object->pose, vote);
 
-                        if (votesMap.find(pattern) == votesMap.end()) {
-                            votesMap[pattern] = std::vector<VotedPosePtr>();
+                        if (votesMap.find(vote->patternName) == votesMap.end()) {
+                            votesMap[vote->patternName] = std::vector<VotedPosePtr>();
                         }
 
                         VotedPosePtr v(new VotedPose(pose, vote, object, object->weight / pattern->expectedMaxWeight));
-                        votesMap[pattern].push_back(v);
+                        votesMap[vote->patternName].push_back(v);
 
+                        auto cacheIt = votingCache.find(object);
+                        if (cacheIt == votingCache.end()) {
+                            cacheIt = votingCache.insert(std::make_pair(object, std::vector<VotedPosePtr>())).first;
+                        }
+
+                        (*cacheIt).second.push_back(v);
                         if (votedPoints->find(object) == votedPoints->end()) {
                             (*votedPoints)[object] = std::vector<std::pair<PointPtr, double> >();
                         }
@@ -85,7 +105,7 @@ namespace ISM {
             auto vsresults = vs.vote(votePair.second);
             for (auto& vsres : vsresults) {
                 RecognitionResultPtr res(
-                        new RecognitionResult(votePair.first->name, vsres->referencePose, vsres->matchingObjects,
+                        new RecognitionResult(votePair.first, vsres->referencePose, vsres->matchingObjects,
                                 vsres->confidence, vsres->idealPoints, votedPoints));
                 // if we have an object on record with a name that matches a pattern name
                 // treat the referencePose as a new object and repeat the recognition to capture subscenes
@@ -152,7 +172,7 @@ namespace ISM {
     }
 
     std::vector<RecognitionResultPtr> Recognizer::filterResults(const std::vector<RecognitionResultPtr>& results,
-            const double filterThreshold) {
+            const double filterThreshold, const int resultsPerPattern) {
         std::map<std::string, std::vector<RecognitionResultPtr> > patternNameToResults;
         std::vector<RecognitionResultPtr> topLevelResults;
         for (auto& res : results) {
@@ -187,7 +207,7 @@ namespace ISM {
             std::sort(rlist.begin(), rlist.end(), [](const RecognitionResultPtr& o1, const RecognitionResultPtr& o2) {
                 return o1->confidence > o2->confidence;
             });
-            for (size_t i = 0; i < rlist.size(); i++) {
+            for (size_t i = 0; i < rlist.size() && (resultsPerPattern < 0 || (int)i < resultsPerPattern); i++) {
                 if (rlist[i]->confidence >= filterThreshold) {
                     auto r = rlist[i];
                     ret.push_back(r);
