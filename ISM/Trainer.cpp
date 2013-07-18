@@ -183,7 +183,7 @@ namespace ISM {
             if (!referencePose && objects.size() > 0) {
                 referencePose.reset(new Pose(*(objects[0]->pose)));
             } else if (!referencePose) {
-            	refTrack->objects.push_back(ObjectPtr());
+                refTrack->objects.push_back(ObjectPtr());
                 continue;
             }
 
@@ -193,14 +193,6 @@ namespace ISM {
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
                 this->tableHelper->insertModelVoteSpecifier(vote);
-                //auto rpoint = MH::applyQuatAndRadiusToPose(o->pose, vote->objectToRefQuat, vote->radius);
-                //auto rpose = MH::getReferencePose(o->pose, rpoint, vote->objectToRefPoseQuat);
-                //auto bpoint = MH::applyQuatAndRadiusToPose(rpose, vote->refToObjectQuat, vote->radius);
-                //std::cerr<<"projected pose:"<<MH::vectorToPoint(MH::getPoseVectorFromQuat(rpose->quat))<<std::endl;
-                //std::cerr<<"projected pose errors:"<<
-                    //(MH::getPoseVectorFromQuat(rpose->quat) - MH::getPoseVectorFromQuat(referencePose->quat)).norm()
-                    //<<","<<MH::getDistanceBetweenPoints(referencePose->point, rpose->point)<<std::endl;
-                //std::cerr<<"error:"<<MH::getDistanceBetweenPoints(o->pose->point, bpoint)<<std::endl;
             }
 
             for (auto& obj : objects) {

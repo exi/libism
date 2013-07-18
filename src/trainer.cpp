@@ -25,6 +25,7 @@ int main (int argc, char** argv) {
     }
 
     string filename = vm["database-file"].as<string>();
+
     Trainer t(filename);
     if (vm.count("skip-count")) {
         t.setSkipsPerCycle(vm["skip-count"].as<int>());
