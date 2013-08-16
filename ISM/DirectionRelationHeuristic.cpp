@@ -59,11 +59,19 @@ namespace ISM {
                             secondObject->pose->point);
                     commonPositions++;
                 }
+                if (commonPositions < (double) first->objects.size() * TOGETHER_RATIO) {
+                    continue;
+                }
 
                 averageDistance /= (double) commonPositions;
 
+                if (currentBest && currentClosestDistance < averageDistance) {
+                    continue;
+                }
+
                 int staticBreaks = 0;
                 Vector directionVector;
+                bool firstRun = true;
 
                 for (size_t i = 0; i < first->objects.size(); i++) {
                     auto firstObject = first->objects[i];
@@ -72,8 +80,9 @@ namespace ISM {
                         continue;
                     }
 
-                    if (i == 0) {
+                    if (firstRun) {
                         directionVector = this->getDirectionVector(firstObject, secondObject);
+                        firstRun = false;
                         continue;
                     }
 
@@ -86,9 +95,7 @@ namespace ISM {
                     }
                 }
 
-                if ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO
-                        && commonPositions > (double) first->objects.size() * TOGETHER_RATIO
-                        && (!currentBest || currentClosestDistance > averageDistance)) {
+                if ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO) {
                     currentBest = second;
                     currentClosestDistance = averageDistance;
                     currentBestBreaks = staticBreaks;
@@ -99,8 +106,8 @@ namespace ISM {
             if (currentBest) {
                 double conf = 1 - (double) currentBestBreaks / (double) currentBestCommonPositions;
                 if (!this->cluster
-                        || (conf > this->confidence
-                                || (conf == this->confidence && bestDistance > currentClosestDistance))) {
+                    || (conf > this->confidence
+                        || (conf == this->confidence && bestDistance > currentClosestDistance))) {
                     std::vector<TrackPtr> cluster;
                     cluster.push_back(first);
                     cluster.push_back(currentBest);
