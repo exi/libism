@@ -193,10 +193,7 @@ namespace ISM {
                 vote->observedId = o->observedId;
                 vote->objectType = o->type;
                 this->tableHelper->insertModelVoteSpecifier(vote);
-            }
-
-            for (auto& obj : objects) {
-                setWeightSum += obj->weight;
+                setWeightSum += o->weight;
             }
 
             auto refObj = ObjectPtr(

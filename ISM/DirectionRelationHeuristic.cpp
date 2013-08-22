@@ -65,10 +65,6 @@ namespace ISM {
 
                 averageDistance /= (double) commonPositions;
 
-                if (currentBest && currentClosestDistance < averageDistance) {
-                    continue;
-                }
-
                 int staticBreaks = 0;
                 Vector directionVector;
                 bool firstRun = true;
@@ -95,7 +91,10 @@ namespace ISM {
                     }
                 }
 
-                if ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO) {
+                if (
+                    ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO) &&
+                    (!currentBest || (currentClosestDistance > averageDistance))
+                    ) {
                     currentBest = second;
                     currentClosestDistance = averageDistance;
                     currentBestBreaks = staticBreaks;
