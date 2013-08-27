@@ -47,7 +47,6 @@ namespace ISM {
         std::map<std::string, std::vector<VotedPosePtr> > votesMap;
 
         VotedPointsTypePtr votedPoints(new VotedPointsType());
-        int voteCount = 0;
         for (ObjectPtr& object : this->inputSet->objects) {
             auto cacheIt = votingCache.find(object);
             if (cacheIt != votingCache.end()) {
@@ -93,7 +92,6 @@ namespace ISM {
                             (*votedPoints)[object] = std::vector<std::pair<PointPtr, double> >();
                         }
                         (*votedPoints)[object].push_back(std::make_pair(pose->point, v->confidence));
-                        voteCount++;
                     }
                 }
             }
@@ -162,11 +160,11 @@ namespace ISM {
     void Recognizer::getPatternDefinitions() {
         typedef std::pair<std::string, std::vector<VoteSpecifierPtr> > mapItemType;
         std::set<std::string> patternNames;
-        BOOST_FOREACH(mapItemType item, this->objectDefinitions){
-        BOOST_FOREACH(VoteSpecifierPtr vote, item.second) {
-            patternNames.insert(vote->patternName);
+        BOOST_FOREACH(mapItemType item, this->objectDefinitions) {
+            BOOST_FOREACH(VoteSpecifierPtr vote, item.second) {
+                patternNames.insert(vote->patternName);
+            }
         }
-    }
 
         this->patternDefinitions = this->tableHelper->getPatternDefinitionsByName(patternNames);
     }
