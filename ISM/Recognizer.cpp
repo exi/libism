@@ -91,7 +91,7 @@ namespace ISM {
                         if (votedPoints->find(object) == votedPoints->end()) {
                             (*votedPoints)[object] = std::vector<std::pair<PointPtr, double> >();
                         }
-                        (*votedPoints)[object].push_back(std::make_pair(pose->point, v->confidence));
+                        (*votedPoints)[object].push_back(std::make_pair(pose->point, v->weight));
                     }
                 }
             }

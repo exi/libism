@@ -10,15 +10,15 @@ namespace ISM {
         PosePtr pose;
         VoteSpecifierPtr vote;
         ObjectPtr source;
-        double confidence;
+        double weight;
 
-        VotedPose(const VotedPose& other): confidence(other.confidence) {
+        VotedPose(const VotedPose& other): weight(other.weight) {
             pose = PosePtr(new Pose(*(other.pose)));
             vote = VoteSpecifierPtr(new VoteSpecifier(*(other.vote)));
             source = ObjectPtr(new Object(*(other.source)));
         }
-        VotedPose(PosePtr pose, VoteSpecifierPtr vote, ObjectPtr source, double confidence):
-            pose(pose), vote(vote), source(source), confidence(confidence) {};
+        VotedPose(PosePtr pose, VoteSpecifierPtr vote, ObjectPtr source, double weight):
+            pose(pose), vote(vote), source(source), weight(weight) {};
     };
 
     typedef boost::shared_ptr<VotedPose> VotedPosePtr;
