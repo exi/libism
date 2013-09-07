@@ -13,6 +13,7 @@
 #include "Tracks.hpp"
 #include "StaticRelationHeuristic.hpp"
 #include "DirectionRelationHeuristic.hpp"
+#include "DirectionOrientationRelationHeuristic.hpp"
 #include "DataCollector.hpp"
 
 namespace ISM {
@@ -93,6 +94,7 @@ namespace ISM {
         std::vector<HeuristicPtr> heuristics;
         //heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
         heuristics.push_back(HeuristicPtr(new DirectionRelationHeuristic(tracks)));
+        //heuristics.push_back(HeuristicPtr(new DirectionOrientationRelationHeuristic(tracks)));
 
         for (auto& heuristic : heuristics) {
             if (!heuristic->cluster) {
@@ -112,7 +114,6 @@ namespace ISM {
         int toSkip = 0;
         int setCount = 0;
         double objectsWeightSum = 0;
-        bool first = true;
         std::string refType = "";
         std::string refId = "";
 
