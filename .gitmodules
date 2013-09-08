@@ -1,3 +1,3 @@
 [submodule "ISM/soci"]
 	path = ISM/soci
-	url = git@github.com:exi/soci.git
+	url = https://github.com/exi/soci.git
