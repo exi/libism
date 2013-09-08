@@ -10,6 +10,10 @@
 #include <set>
 #include <vector>
 
+#ifndef VB_MAX_PROJECTION_ANGLE_DEVIATION
+#define VB_MAX_PROJECTION_ANGLE_DEVIATION 10.0
+#endif
+
 namespace ISM {
     class VotingBin {
         public:

@@ -99,7 +99,7 @@ namespace ISM {
 
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
-                    if (distance <= sensitivity && angle < 10.0) {
+                    if (distance <= sensitivity && angle < VB_MAX_PROJECTION_ANGLE_DEVIATION) {
                         idealPoints.push_back(projectedPoint);
                         takenSources.insert(vote->source);
                         fittingStack.push(vote);

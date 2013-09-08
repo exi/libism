@@ -5,10 +5,6 @@
 #include <algorithm>
 #include "MathHelper.hpp"
 
-#define STATIC_BREAK_RATIO 0.01
-#define TOGETHER_RATIO 0.90
-#define MAX_ANGLE_DEVIATION 45
-
 namespace ISM {
     DirectionOrientationRelationHeuristic::DirectionOrientationRelationHeuristic(const TracksPtr& tracks) :
             Heuristic("DirectionOrientationRelationHeuristic") {
@@ -31,12 +27,12 @@ namespace ISM {
                  * What we do:
                  * Calculate a direction Vector from first to second for every Frame.
                  * Check in every frame the angle between the reference vector (first vector) and the current vector.
-                 * If the misalignment is more than MAX_ANGLE_DEVIATION degrees, increase staticBreaks and
+                 * If the misalignment is more than DORH_MAX_ANGLE_DEVIATION degrees, increase staticBreaks and
                  * recalculate the reference vote.
                  * Also calculate the average distance between first and second.
                  *
-                 * At the end, if the staticBreaks are below STATIC_BREAK_RATIO of the sample range,
-                 * and they appear together in more than TOGETHER_RATIO of the frames,
+                 * At the end, if the staticBreaks are below DORH_STATIC_BREAK_RATIO of the sample range,
+                 * and they appear together in more than DORH_TOGETHER_RATIO of the frames,
                  * and the second is closer to first than the current closest track,
                  * replace the current closest track with second.
                  *
@@ -59,7 +55,7 @@ namespace ISM {
                             secondObject->pose->point);
                     commonPositions++;
                 }
-                if (commonPositions < (double) first->objects.size() * TOGETHER_RATIO) {
+                if (commonPositions < (double) first->objects.size() * DORH_TOGETHER_RATIO) {
                     continue;
                 }
 
@@ -93,7 +89,7 @@ namespace ISM {
                     auto deviation = MH::rad2deg(acos(directionVector.dot(currentDirection)));
                     auto orientationDeviation = fabs(orientationDifference - currentOrientationDiff);
 
-                    if (deviation > MAX_ANGLE_DEVIATION || orientationDeviation > MAX_ANGLE_DEVIATION) {
+                    if (deviation > DORH_MAX_ANGLE_DEVIATION || orientationDeviation > DORH_MAX_ANGLE_DEVIATION) {
                         staticBreaks++;
                         directionVector = currentDirection;
                         orientationDifference = currentOrientationDiff;
@@ -101,7 +97,7 @@ namespace ISM {
                 }
 
                 if (
-                    ((double) staticBreaks < ((double) commonPositions) * STATIC_BREAK_RATIO) &&
+                    ((double) staticBreaks < ((double) commonPositions) * DORH_STATIC_BREAK_RATIO) &&
                     (!currentBest || (currentClosestDistance > averageDistance))
                     ) {
                     currentBest = second;
