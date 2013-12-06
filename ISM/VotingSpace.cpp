@@ -12,8 +12,8 @@ namespace ISM {
     std::vector<VotingSpaceResultPtr> VotingSpace::vote(std::vector<VotedPosePtr>& votes) {
         this->voteMap.clear();
 
-        std::sort(votes.begin(), votes.end(), [](const VotedPosePtr& o1, const VotedPosePtr& o2) {
-            return o1->confidence > o2->confidence;
+        std::sort(votes.begin(), votes.end(), [](const VotedPosePtr& v1, const VotedPosePtr& v2) {
+            return v1->weight > v2->weight;
         });
         for (const VotedPosePtr& vote : votes) {
             PointPtr point = vote->pose->point;

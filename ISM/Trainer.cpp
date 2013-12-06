@@ -10,10 +10,10 @@
 #include "MathHelper.hpp"
 #include "VoteSpecifier.hpp"
 #include "Pose.hpp"
-#include "JsonStream.hpp"
 #include "Tracks.hpp"
 #include "StaticRelationHeuristic.hpp"
 #include "DirectionRelationHeuristic.hpp"
+#include "DirectionOrientationRelationHeuristic.hpp"
 #include "DataCollector.hpp"
 
 namespace ISM {
@@ -46,13 +46,11 @@ namespace ISM {
         } else {
             std::cerr<<"training "<<patternName<<std::endl;
             this->recordedPattern = r;
-            this->learn(false);
+            this->learn();
         }
     }
 
-    void Trainer::learn(bool generateJson) {
-        typedef MathHelper MH;
-
+    void Trainer::learn() {
         std::vector<ObjectSetPtr> sets = this->recordedPattern->objectSets;
         for (size_t i = 0; i < sets.size(); i++) {
             if (sets[i]->objects.size() == 0) {
@@ -96,6 +94,7 @@ namespace ISM {
         std::vector<HeuristicPtr> heuristics;
         //heuristics.push_back(HeuristicPtr(new StaticRelationHeuristic(tracks)));
         heuristics.push_back(HeuristicPtr(new DirectionRelationHeuristic(tracks)));
+        //heuristics.push_back(HeuristicPtr(new DirectionOrientationRelationHeuristic(tracks)));
 
         for (auto& heuristic : heuristics) {
             if (!heuristic->cluster) {
@@ -115,7 +114,6 @@ namespace ISM {
         int toSkip = 0;
         int setCount = 0;
         double objectsWeightSum = 0;
-        bool first = true;
         std::string refType = "";
         std::string refId = "";
 
@@ -221,18 +219,5 @@ namespace ISM {
         std::cerr<<"done ("<<refTrack->weight<<")"<<std::endl;
 
         return refTrack;
-    }
-
-    std::string Trainer::getJsonRepresentation(const std::string& patternName) {
-        boost::shared_ptr<RecordedPattern> r = this->tableHelper->getRecordedPattern(patternName);
-        if (r) {
-            this->json.str("");
-            this->json.clear();
-            this->recordedPattern = r;
-            this->learn(true);
-            return this->json.str();
-        } else {
-            return "";
-        }
     }
 }

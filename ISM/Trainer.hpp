@@ -15,7 +15,6 @@ namespace ISM {
         TableHelperPtr tableHelper;
         RecordedPatternPtr recordedPattern;
         PointPtr absoluteReferencePoint;
-        std::stringstream json;
         int skips;
         bool useClustering;
         public:
@@ -25,15 +24,10 @@ namespace ISM {
             void trainPattern(const std::string& patternName);
             void setSkipsPerCycle(const int skips);
             void setUseClustering(const bool useClustering);
-            std::string getJsonRepresentation(const std::string& patternName);
 
         private:
-            void learn(bool generateJson);
+            void learn();
             HeuristicPtr findHeuristicMatch(const TracksPtr& tracks);
             TrackPtr doTraining(const std::vector<ObjectSetPtr> sets, std::string patternName);
-            void jsonPutPoint(const PointPtr& point);
-            void jsonPutPose(const PosePtr& pose);
-            void jsonPutQuaternion(const QuaternionPtr& quat);
-            void jsonPutObjectAndVote(const ObjectPtr& object, const VoteSpecifierPtr& vote);
     };
 }

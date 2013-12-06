@@ -1,4 +1,4 @@
-#include "DirectionRelationHeuristic.hpp"
+#include "DirectionOrientationRelationHeuristic.hpp"
 
 #include <vector>
 #include <boost/math/constants/constants.hpp>
@@ -6,8 +6,8 @@
 #include "MathHelper.hpp"
 
 namespace ISM {
-    DirectionRelationHeuristic::DirectionRelationHeuristic(const TracksPtr& tracks) :
-            Heuristic("DirectionRelationHeuristic") {
+    DirectionOrientationRelationHeuristic::DirectionOrientationRelationHeuristic(const TracksPtr& tracks) :
+            Heuristic("DirectionOrientationRelationHeuristic") {
         typedef MathHelper MH;
         typedef Eigen::Vector3d Vector;
 
@@ -27,12 +27,12 @@ namespace ISM {
                  * What we do:
                  * Calculate a direction Vector from first to second for every Frame.
                  * Check in every frame the angle between the reference vector (first vector) and the current vector.
-                 * If the misalignment is more than DRH_MAX_ANGLE_DEVIATION degrees, increase staticBreaks and
+                 * If the misalignment is more than DORH_MAX_ANGLE_DEVIATION degrees, increase staticBreaks and
                  * recalculate the reference vote.
                  * Also calculate the average distance between first and second.
                  *
-                 * At the end, if the staticBreaks are below DRH_STATIC_BREAK_RATIO of the sample range,
-                 * and they appear together in more than DRH_TOGETHER_RATIO of the frames,
+                 * At the end, if the staticBreaks are below DORH_STATIC_BREAK_RATIO of the sample range,
+                 * and they appear together in more than DORH_TOGETHER_RATIO of the frames,
                  * and the second is closer to first than the current closest track,
                  * replace the current closest track with second.
                  *
@@ -55,7 +55,7 @@ namespace ISM {
                             secondObject->pose->point);
                     commonPositions++;
                 }
-                if (commonPositions < (double) first->objects.size() * DRH_TOGETHER_RATIO) {
+                if (commonPositions < (double) first->objects.size() * DORH_TOGETHER_RATIO) {
                     continue;
                 }
 
@@ -63,6 +63,7 @@ namespace ISM {
 
                 int staticBreaks = 0;
                 Vector directionVector;
+                double orientationDifference;
                 bool firstRun = true;
 
                 for (size_t i = 0; i < first->objects.size(); i++) {
@@ -74,21 +75,29 @@ namespace ISM {
 
                     if (firstRun) {
                         directionVector = this->getDirectionVector(firstObject, secondObject);
+                        orientationDifference = MH::getAngleBetweenQuats(
+                            firstObject->pose->quat, secondObject->pose->quat
+                        );
                         firstRun = false;
                         continue;
                     }
 
                     auto currentDirection = this->getDirectionVector(firstObject, secondObject);
+                    auto currentOrientationDiff = MH::getAngleBetweenQuats(
+                        firstObject->pose->quat, secondObject->pose->quat
+                    );
                     auto deviation = MH::rad2deg(acos(directionVector.dot(currentDirection)));
+                    auto orientationDeviation = fabs(orientationDifference - currentOrientationDiff);
 
-                    if (deviation > DRH_MAX_ANGLE_DEVIATION) {
+                    if (deviation > DORH_MAX_ANGLE_DEVIATION || orientationDeviation > DORH_MAX_ANGLE_DEVIATION) {
                         staticBreaks++;
                         directionVector = currentDirection;
+                        orientationDifference = currentOrientationDiff;
                     }
                 }
 
                 if (
-                    ((double) staticBreaks < ((double) commonPositions) * DRH_STATIC_BREAK_RATIO) &&
+                    ((double) staticBreaks < ((double) commonPositions) * DORH_STATIC_BREAK_RATIO) &&
                     (!currentBest || (currentClosestDistance > averageDistance))
                     ) {
                     currentBest = second;
@@ -114,7 +123,7 @@ namespace ISM {
         }
     }
 
-    Eigen::Vector3d DirectionRelationHeuristic::getDirectionVector(const ObjectPtr& first, const ObjectPtr& second) {
+    Eigen::Vector3d DirectionOrientationRelationHeuristic::getDirectionVector(const ObjectPtr& first, const ObjectPtr& second) {
         typedef MathHelper MH;
         typedef Eigen::Vector3d Vector;
 

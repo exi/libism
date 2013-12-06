@@ -16,10 +16,11 @@ namespace ISM {
         }
 
         idIt->second.push_back(vote);
+        sources.insert(vote->source);
     }
 
     VotingBinResultPtr VotingBin::getResult(double sensitivity) {
-        std::vector<VotingBinResultPtr> results;
+        VotingBinResultPtr result;
         auto typeIt = votes.begin();
         auto typeItEnd = votes.end();
         for (; typeIt != typeItEnd; typeIt++) {
@@ -40,32 +41,38 @@ namespace ISM {
                     PointPtr projectedPoint = MathHelper::getOriginPoint(this->fittingPose,
                             (*voteIt)->vote->refToObjectQuat, (*voteIt)->vote->radius);
                     this->idealPoints.push_back(projectedPoint);
-                    if (searchFit(sensitivity)) {
-                        double confidence = 0;
-                        ObjectSetPtr os(new ObjectSet());
-                        while (!this->fittingStack.empty()) {
-                            VotedPosePtr p = this->fittingStack.top();
-                            this->fittingStack.pop();
-                            confidence += p->confidence;
-                            ObjectPtr o(new Object(*(p->source)));
-                            o->observedId = p->vote->observedId;
-                            o->type = p->vote->objectType;
-                            os->insert(o);
-                        }
 
-                        VotingBinResultPtr r(
-                                new VotingBinResult(os, this->fittingPose, confidence,
-                                        std::vector<PointPtr>(this->idealPoints)));
-                        return r;
+                    searchFit(sensitivity);
+                    double confidence = 0;
+                    ObjectSetPtr os(new ObjectSet());
+                    while (!this->fittingStack.empty()) {
+                        VotedPosePtr p = this->fittingStack.top();
+                        this->fittingStack.pop();
+                        confidence += p->weight;
+                        ObjectPtr o(new Object(*(p->source)));
+                        o->observedId = p->vote->observedId;
+                        o->type = p->vote->objectType;
+                        os->insert(o);
+                    }
+
+                    if (!result || (result && result->confidence < confidence)) {
+                        result = VotingBinResultPtr(new VotingBinResult(
+                                    os,
+                                    this->fittingPose,
+                                    confidence,
+                                    std::vector<PointPtr>(this->idealPoints)));
+                        if (os->objects.size() == sources.size()) {
+                            return result;
+                        }
                     }
                 }
             }
         }
 
-        return VotingBinResultPtr();
+        return result;
     }
 
-    bool VotingBin::searchFit(double sensitivity) {
+    void VotingBin::searchFit(double sensitivity) {
         auto typeIt = votes.begin();
         auto typeItEnd = votes.end();
 
@@ -80,7 +87,6 @@ namespace ISM {
                 auto voteIt = idIt->second.begin();
                 auto voteItEnd = idIt->second.end();
 
-                bool found = false;
                 for (; voteIt != voteItEnd; voteIt++) {
                     VotedPosePtr vote = *voteIt;
 
@@ -93,20 +99,14 @@ namespace ISM {
 
                     double distance = MathHelper::getDistanceBetweenPoints(vote->source->pose->point, projectedPoint);
                     double angle = MathHelper::getAngleBetweenQuats(vote->pose->quat, fittingPose->quat);
-                    if (distance <= sensitivity && angle < 10.0) {
+                    if (distance <= sensitivity && angle < VB_MAX_PROJECTION_ANGLE_DEVIATION) {
                         idealPoints.push_back(projectedPoint);
                         takenSources.insert(vote->source);
                         fittingStack.push(vote);
-                        found = true;
                         break;
                     }
                 }
-
-                if (!found) {
-                    return false;
-                }
             }
         }
-        return true;
     }
 }

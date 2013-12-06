@@ -10,6 +10,10 @@
 #include <set>
 #include <vector>
 
+#ifndef VB_MAX_PROJECTION_ANGLE_DEVIATION
+#define VB_MAX_PROJECTION_ANGLE_DEVIATION 10.0
+#endif
+
 namespace ISM {
     class VotingBin {
         public:
@@ -21,13 +25,14 @@ namespace ISM {
             void insert(const VotedPosePtr& vote);
             VotingBinResultPtr getResult(double sensitivity);
         private:
+            std::set<ObjectPtr> sources;
             std::stack<VotedPosePtr> fittingStack;
             std::vector<PointPtr> idealPoints;
             TypeToInnerMap::iterator currentType;
             IdToVoteMap::iterator currentId;
             std::set<ObjectPtr> takenSources;
             PosePtr fittingPose;
-            bool searchFit(double sensitivity);
+            void searchFit(double sensitivity);
             void addVoteToStack(const VotedPosePtr& v);
     };
 
